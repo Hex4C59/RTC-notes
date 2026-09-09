@@ -1,0 +1,320 @@
+{
+  "nodes": [
+    {
+      "id": "root",
+      "type": "text",
+      "text": "# 10 RTCP 与质量反馈\n\n[[00-知识地图/RTC 树状知识地图.canvas|返回 RTC 总树]] · [[00-知识地图/专题说明/10 RTCP 与质量反馈|本专题学习说明]]\n\n上到下：专题 → 知识组 → 具体知识点。点击知识点进入说明；组卡链接已有详解。",
+      "x": 520,
+      "y": 0,
+      "width": 720,
+      "height": 190,
+      "color": "#00897B"
+    },
+    {
+      "id": "g0",
+      "type": "text",
+      "text": "## 10.1 基础 RTCP 包\n\nP1\n\n配套详解：[[RTCP]] · [[RTCP 报文计算与调度状态机]]",
+      "x": 0,
+      "y": 300,
+      "width": 420,
+      "height": 250,
+      "color": "#00897B"
+    },
+    {
+      "id": "p0-0",
+      "type": "text",
+      "text": "### [[00-知识地图/专题说明/10 RTCP 与质量反馈#SR 发送方报告|SR 发送方报告]]\n\n理解发送统计、NTP/RTP 时间对和接收报告块；不是把整段媒体重新发送一遍。\n\n[[00-知识地图/专题说明/10 RTCP 与质量反馈#10.1 基础 RTCP 包 · P1|学习说明与练习]]",
+      "x": 55,
+      "y": 670,
+      "width": 365,
+      "height": 300,
+      "color": "#00897B"
+    },
+    {
+      "id": "p0-1",
+      "type": "text",
+      "text": "### [[00-知识地图/专题说明/10 RTCP 与质量反馈#RR 接收方报告|RR 接收方报告]]\n\n理解分数丢包、累计丢包、最高扩展序号和到达间隔抖动等接收统计。\n\n[[00-知识地图/专题说明/10 RTCP 与质量反馈#10.1 基础 RTCP 包 · P1|学习说明与练习]]",
+      "x": 55,
+      "y": 1020,
+      "width": 365,
+      "height": 300,
+      "color": "#00897B"
+    },
+    {
+      "id": "p0-2",
+      "type": "text",
+      "text": "### [[00-知识地图/专题说明/10 RTCP 与质量反馈#SDES/CNAME 与 BYE|SDES/CNAME 与 BYE]]\n\n理解来源描述、跨流关联和退出通知；CNAME 与业务用户名不是同一概念。\n\n[[00-知识地图/专题说明/10 RTCP 与质量反馈#10.1 基础 RTCP 包 · P1|学习说明与练习]]",
+      "x": 55,
+      "y": 1370,
+      "width": 365,
+      "height": 300,
+      "color": "#00897B"
+    },
+    {
+      "id": "g1",
+      "type": "text",
+      "text": "## 10.2 时间与统计计算\n\nP1\n\n配套详解：[[RTCP]] · [[时钟与时间戳]]",
+      "x": 470,
+      "y": 300,
+      "width": 420,
+      "height": 250,
+      "color": "#00897B"
+    },
+    {
+      "id": "p1-0",
+      "type": "text",
+      "text": "### [[00-知识地图/专题说明/10 RTCP 与质量反馈#RTT 估计|RTT 估计]]\n\n理解报告中的 LSR/DLSR 及对应时刻；RTT 估计并不包含整个播放管线的延迟。\n\n[[00-知识地图/专题说明/10 RTCP 与质量反馈#10.2 时间与统计计算 · P1|学习说明与练习]]",
+      "x": 525,
+      "y": 670,
+      "width": 365,
+      "height": 300,
+      "color": "#00897B"
+    },
+    {
+      "id": "p1-1",
+      "type": "text",
+      "text": "### [[00-知识地图/专题说明/10 RTCP 与质量反馈#RTP interarrival jitter|RTP interarrival jitter]]\n\n认识按 RTP 时钟单位计算的到达间隔抖动估计，不把它当作缓冲区长度。\n\n[[00-知识地图/专题说明/10 RTCP 与质量反馈#10.2 时间与统计计算 · P1|学习说明与练习]]",
+      "x": 525,
+      "y": 1020,
+      "width": 365,
+      "height": 300,
+      "color": "#00897B"
+    },
+    {
+      "id": "p1-2",
+      "type": "text",
+      "text": "### [[00-知识地图/专题说明/10 RTCP 与质量反馈#统计窗口与计数口径|统计窗口与计数口径]]\n\n分清累计值、区间值、网络丢包、修复后的丢失及重复/晚到包处理。\n\n[[00-知识地图/专题说明/10 RTCP 与质量反馈#10.2 时间与统计计算 · P1|学习说明与练习]]",
+      "x": 525,
+      "y": 1370,
+      "width": 365,
+      "height": 300,
+      "color": "#00897B"
+    },
+    {
+      "id": "g2",
+      "type": "text",
+      "text": "## 10.3 即时反馈\n\nP1\n\n配套详解：[[NACK]] · [[PLI 与 FIR]]",
+      "x": 940,
+      "y": 300,
+      "width": 420,
+      "height": 250,
+      "color": "#00897B"
+    },
+    {
+      "id": "p2-0",
+      "type": "text",
+      "text": "### [[00-知识地图/专题说明/10 RTCP 与质量反馈#NACK 丢包反馈|NACK 丢包反馈]]\n\n告诉发送端哪些序号缺失；是否重传仍需要时限、缓存和带宽策略。\n\n[[00-知识地图/专题说明/10 RTCP 与质量反馈#10.3 即时反馈 · P1|学习说明与练习]]",
+      "x": 995,
+      "y": 670,
+      "width": 365,
+      "height": 300,
+      "color": "#00897B"
+    },
+    {
+      "id": "p2-1",
+      "type": "text",
+      "text": "### [[00-知识地图/专题说明/10 RTCP 与质量反馈#PLI/FIR 图像恢复请求|PLI/FIR 图像恢复请求]]\n\n认识图像恢复/刷新请求，区分它们与“重传指定包”；FIR 与 PLI 也不是完全同义。\n\n[[00-知识地图/专题说明/10 RTCP 与质量反馈#10.3 即时反馈 · P1|学习说明与练习]]",
+      "x": 995,
+      "y": 1020,
+      "width": 365,
+      "height": 300,
+      "color": "#00897B"
+    },
+    {
+      "id": "p2-2",
+      "type": "text",
+      "text": "### [[00-知识地图/专题说明/10 RTCP 与质量反馈#反馈发送频率与限流|反馈发送频率与限流]]\n\n控制反馈开销、重复请求和大量接收端同时请求，避免反馈风暴。\n\n[[00-知识地图/专题说明/10 RTCP 与质量反馈#10.3 即时反馈 · P1|学习说明与练习]]",
+      "x": 995,
+      "y": 1370,
+      "width": 365,
+      "height": 300,
+      "color": "#00897B"
+    },
+    {
+      "id": "g3",
+      "type": "text",
+      "text": "## 10.4 反馈与系统控制\n\nP2\n\n配套详解：[[TWCC]] · [[QoS 与 QoE]]",
+      "x": 1410,
+      "y": 300,
+      "width": 420,
+      "height": 250,
+      "color": "#00897B"
+    },
+    {
+      "id": "p3-0",
+      "type": "text",
+      "text": "### [[00-知识地图/专题说明/10 RTCP 与质量反馈#Transport-wide 反馈|Transport-wide 反馈]]\n\n认识传输范围序号与接收时序反馈；它提供观测，不等于拥塞控制算法。\n\n[[00-知识地图/专题说明/10 RTCP 与质量反馈#10.4 反馈与系统控制 · P2|学习说明与练习]]",
+      "x": 1465,
+      "y": 670,
+      "width": 365,
+      "height": 300,
+      "color": "#00897B"
+    },
+    {
+      "id": "p3-1",
+      "type": "text",
+      "text": "### [[00-知识地图/专题说明/10 RTCP 与质量反馈#RTCP 调度与复合包|RTCP 调度与复合包]]\n\n理解报告间隔、带宽预算和具体 profile 的包组合要求。\n\n[[00-知识地图/专题说明/10 RTCP 与质量反馈#10.4 反馈与系统控制 · P2|学习说明与练习]]",
+      "x": 1465,
+      "y": 1020,
+      "width": 365,
+      "height": 300,
+      "color": "#00897B"
+    },
+    {
+      "id": "p3-2",
+      "type": "text",
+      "text": "### [[00-知识地图/专题说明/10 RTCP 与质量反馈#协议统计与业务体验|协议统计与业务体验]]\n\n丢包不必然等于卡顿；结合缓冲、修复、解码和播放指标才知道用户体验。\n\n[[00-知识地图/专题说明/10 RTCP 与质量反馈#10.4 反馈与系统控制 · P2|学习说明与练习]]",
+      "x": 1465,
+      "y": 1370,
+      "width": 365,
+      "height": 300,
+      "color": "#00897B"
+    }
+  ],
+  "edges": [
+    {
+      "id": "r-g0",
+      "fromNode": "root",
+      "fromSide": "bottom",
+      "toNode": "g0",
+      "toSide": "top",
+      "toEnd": "arrow",
+      "color": "#00897B"
+    },
+    {
+      "id": "g0-p0",
+      "fromNode": "g0",
+      "fromSide": "left",
+      "toNode": "p0-0",
+      "toSide": "left",
+      "toEnd": "arrow",
+      "color": "#00897B"
+    },
+    {
+      "id": "g0-p1",
+      "fromNode": "g0",
+      "fromSide": "left",
+      "toNode": "p0-1",
+      "toSide": "left",
+      "toEnd": "arrow",
+      "color": "#00897B"
+    },
+    {
+      "id": "g0-p2",
+      "fromNode": "g0",
+      "fromSide": "left",
+      "toNode": "p0-2",
+      "toSide": "left",
+      "toEnd": "arrow",
+      "color": "#00897B"
+    },
+    {
+      "id": "r-g1",
+      "fromNode": "root",
+      "fromSide": "bottom",
+      "toNode": "g1",
+      "toSide": "top",
+      "toEnd": "arrow",
+      "color": "#00897B"
+    },
+    {
+      "id": "g1-p0",
+      "fromNode": "g1",
+      "fromSide": "left",
+      "toNode": "p1-0",
+      "toSide": "left",
+      "toEnd": "arrow",
+      "color": "#00897B"
+    },
+    {
+      "id": "g1-p1",
+      "fromNode": "g1",
+      "fromSide": "left",
+      "toNode": "p1-1",
+      "toSide": "left",
+      "toEnd": "arrow",
+      "color": "#00897B"
+    },
+    {
+      "id": "g1-p2",
+      "fromNode": "g1",
+      "fromSide": "left",
+      "toNode": "p1-2",
+      "toSide": "left",
+      "toEnd": "arrow",
+      "color": "#00897B"
+    },
+    {
+      "id": "r-g2",
+      "fromNode": "root",
+      "fromSide": "bottom",
+      "toNode": "g2",
+      "toSide": "top",
+      "toEnd": "arrow",
+      "color": "#00897B"
+    },
+    {
+      "id": "g2-p0",
+      "fromNode": "g2",
+      "fromSide": "left",
+      "toNode": "p2-0",
+      "toSide": "left",
+      "toEnd": "arrow",
+      "color": "#00897B"
+    },
+    {
+      "id": "g2-p1",
+      "fromNode": "g2",
+      "fromSide": "left",
+      "toNode": "p2-1",
+      "toSide": "left",
+      "toEnd": "arrow",
+      "color": "#00897B"
+    },
+    {
+      "id": "g2-p2",
+      "fromNode": "g2",
+      "fromSide": "left",
+      "toNode": "p2-2",
+      "toSide": "left",
+      "toEnd": "arrow",
+      "color": "#00897B"
+    },
+    {
+      "id": "r-g3",
+      "fromNode": "root",
+      "fromSide": "bottom",
+      "toNode": "g3",
+      "toSide": "top",
+      "toEnd": "arrow",
+      "color": "#00897B"
+    },
+    {
+      "id": "g3-p0",
+      "fromNode": "g3",
+      "fromSide": "left",
+      "toNode": "p3-0",
+      "toSide": "left",
+      "toEnd": "arrow",
+      "color": "#00897B"
+    },
+    {
+      "id": "g3-p1",
+      "fromNode": "g3",
+      "fromSide": "left",
+      "toNode": "p3-1",
+      "toSide": "left",
+      "toEnd": "arrow",
+      "color": "#00897B"
+    },
+    {
+      "id": "g3-p2",
+      "fromNode": "g3",
+      "fromSide": "left",
+      "toNode": "p3-2",
+      "toSide": "left",
+      "toEnd": "arrow",
+      "color": "#00897B"
+    }
+  ]
+}

@@ -1,0 +1,320 @@
+{
+  "nodes": [
+    {
+      "id": "root",
+      "type": "text",
+      "text": "# 13 RTC 媒体处理与 FFmpeg\n\n[[00-知识地图/RTC 树状知识地图.canvas|返回 RTC 总树]] · [[00-知识地图/专题说明/13 RTC 媒体处理与 FFmpeg|本专题学习说明]]\n\n上到下：专题 → 知识组 → 具体知识点。点击知识点进入说明；组卡链接已有详解。",
+      "x": 520,
+      "y": 0,
+      "width": 720,
+      "height": 190,
+      "color": "#8061B3"
+    },
+    {
+      "id": "g0",
+      "type": "text",
+      "text": "## 13.1 命令行观察与实验\n\nP0\n\n配套详解：[[码流与容器]]",
+      "x": 0,
+      "y": 300,
+      "width": 420,
+      "height": 250,
+      "color": "#8061B3"
+    },
+    {
+      "id": "p0-0",
+      "type": "text",
+      "text": "### [[00-知识地图/专题说明/13 RTC 媒体处理与 FFmpeg#ffprobe 媒体检查|ffprobe 媒体检查]]\n\n读取流、编码、采样率、像素格式、时间基、包和帧信息，验证自己的判断。\n\n[[00-知识地图/专题说明/13 RTC 媒体处理与 FFmpeg#13.1 命令行观察与实验 · P0|学习说明与练习]]",
+      "x": 55,
+      "y": 670,
+      "width": 365,
+      "height": 300,
+      "color": "#8061B3"
+    },
+    {
+      "id": "p0-1",
+      "type": "text",
+      "text": "### [[00-知识地图/专题说明/13 RTC 媒体处理与 FFmpeg#ffmpeg 转换与生成|ffmpeg 转换与生成]]\n\n练习提取音频、转码、重采样、缩放和生成测试源，给 RTC 模块准备可控输入。\n\n[[00-知识地图/专题说明/13 RTC 媒体处理与 FFmpeg#13.1 命令行观察与实验 · P0|学习说明与练习]]",
+      "x": 55,
+      "y": 1020,
+      "width": 365,
+      "height": 300,
+      "color": "#8061B3"
+    },
+    {
+      "id": "p0-2",
+      "type": "text",
+      "text": "### [[00-知识地图/专题说明/13 RTC 媒体处理与 FFmpeg#ffplay 与裸数据播放|ffplay 与裸数据播放]]\n\n明确裸 PCM/YUV 缺少哪些格式信息；播放命令要与真实数据参数一致。\n\n[[00-知识地图/专题说明/13 RTC 媒体处理与 FFmpeg#13.1 命令行观察与实验 · P0|学习说明与练习]]",
+      "x": 55,
+      "y": 1370,
+      "width": 365,
+      "height": 300,
+      "color": "#8061B3"
+    },
+    {
+      "id": "g1",
+      "type": "text",
+      "text": "## 13.2 媒体对象与库职责\n\nP1\n\n配套详解：[[复用与解复用]] · [[AVPacket 与 AVFrame]]",
+      "x": 470,
+      "y": 300,
+      "width": 420,
+      "height": 250,
+      "color": "#8061B3"
+    },
+    {
+      "id": "p1-0",
+      "type": "text",
+      "text": "### [[00-知识地图/专题说明/13 RTC 媒体处理与 FFmpeg#AVFormatContext 与 AVStream|AVFormatContext 与 AVStream]]\n\n认识容器/输入输出上下文和流信息；不要把流对象当成网络连接。\n\n[[00-知识地图/专题说明/13 RTC 媒体处理与 FFmpeg#13.2 媒体对象与库职责 · P1|学习说明与练习]]",
+      "x": 525,
+      "y": 670,
+      "width": 365,
+      "height": 300,
+      "color": "#8061B3"
+    },
+    {
+      "id": "p1-1",
+      "type": "text",
+      "text": "### [[00-知识地图/专题说明/13 RTC 媒体处理与 FFmpeg#AVCodecContext、AVPacket、AVFrame|AVCodecContext、AVPacket、AVFrame]]\n\n分别理解编解码状态、编码数据包和原始媒体帧；AVPacket 不是 RTP 包。\n\n[[00-知识地图/专题说明/13 RTC 媒体处理与 FFmpeg#13.2 媒体对象与库职责 · P1|学习说明与练习]]",
+      "x": 525,
+      "y": 1020,
+      "width": 365,
+      "height": 300,
+      "color": "#8061B3"
+    },
+    {
+      "id": "p1-2",
+      "type": "text",
+      "text": "### [[00-知识地图/专题说明/13 RTC 媒体处理与 FFmpeg#各库的分工|各库的分工]]\n\n区分 libavformat、libavcodec、libavutil、libswresample、libswscale、libavfilter。\n\n[[00-知识地图/专题说明/13 RTC 媒体处理与 FFmpeg#13.2 媒体对象与库职责 · P1|学习说明与练习]]",
+      "x": 525,
+      "y": 1370,
+      "width": 365,
+      "height": 300,
+      "color": "#8061B3"
+    },
+    {
+      "id": "g2",
+      "type": "text",
+      "text": "## 13.3 现代解码与编码流程\n\nP1\n\n配套详解：[[FFmpeg 解码状态机]]",
+      "x": 940,
+      "y": 300,
+      "width": 420,
+      "height": 250,
+      "color": "#8061B3"
+    },
+    {
+      "id": "p2-0",
+      "type": "text",
+      "text": "### [[00-知识地图/专题说明/13 RTC 媒体处理与 FFmpeg#打开输入与取得参数|打开输入与取得参数]]\n\n学习 avformat_open_input、查流、创建编解码上下文和参数复制。\n\n[[00-知识地图/专题说明/13 RTC 媒体处理与 FFmpeg#13.3 现代解码与编码流程 · P1|学习说明与练习]]",
+      "x": 995,
+      "y": 670,
+      "width": 365,
+      "height": 300,
+      "color": "#8061B3"
+    },
+    {
+      "id": "p2-1",
+      "type": "text",
+      "text": "### [[00-知识地图/专题说明/13 RTC 媒体处理与 FFmpeg#send/receive 状态机|send/receive 状态机]]\n\n使用 avcodec_send_packet/receive_frame 和 send_frame/receive_packet，处理 EAGAIN 与排空。\n\n[[00-知识地图/专题说明/13 RTC 媒体处理与 FFmpeg#13.3 现代解码与编码流程 · P1|学习说明与练习]]",
+      "x": 995,
+      "y": 1020,
+      "width": 365,
+      "height": 300,
+      "color": "#8061B3"
+    },
+    {
+      "id": "p2-2",
+      "type": "text",
+      "text": "### [[00-知识地图/专题说明/13 RTC 媒体处理与 FFmpeg#缓冲引用与资源释放|缓冲引用与资源释放]]\n\n学习分配、引用、unref/free；跨线程传递时明确对象和底层数据的所有权。\n\n[[00-知识地图/专题说明/13 RTC 媒体处理与 FFmpeg#13.3 现代解码与编码流程 · P1|学习说明与练习]]",
+      "x": 995,
+      "y": 1370,
+      "width": 365,
+      "height": 300,
+      "color": "#8061B3"
+    },
+    {
+      "id": "g3",
+      "type": "text",
+      "text": "## 13.4 RTC 接入与版本意识\n\nP1\n\n配套详解：[[PTS DTS 与时间基]] · [[FilterGraph 重采样与缩放]]",
+      "x": 1410,
+      "y": 300,
+      "width": 420,
+      "height": 250,
+      "color": "#8061B3"
+    },
+    {
+      "id": "p3-0",
+      "type": "text",
+      "text": "### [[00-知识地图/专题说明/13 RTC 媒体处理与 FFmpeg#时间基转换与实时节奏|时间基转换与实时节奏]]\n\n从文件读取不代表应尽快发完；按媒体时间调度，并保持 PTS/时钟单位一致。\n\n[[00-知识地图/专题说明/13 RTC 媒体处理与 FFmpeg#13.4 RTC 接入与版本意识 · P1|学习说明与练习]]",
+      "x": 1465,
+      "y": 670,
+      "width": 365,
+      "height": 300,
+      "color": "#8061B3"
+    },
+    {
+      "id": "p3-1",
+      "type": "text",
+      "text": "### [[00-知识地图/专题说明/13 RTC 媒体处理与 FFmpeg#重采样与像素变换|重采样与像素变换]]\n\n把解码输出适配到 Opus、视频编码器或播放设备所需格式。\n\n[[00-知识地图/专题说明/13 RTC 媒体处理与 FFmpeg#13.4 RTC 接入与版本意识 · P1|学习说明与练习]]",
+      "x": 1465,
+      "y": 1020,
+      "width": 365,
+      "height": 300,
+      "color": "#8061B3"
+    },
+    {
+      "id": "p3-2",
+      "type": "text",
+      "text": "### [[00-知识地图/专题说明/13 RTC 媒体处理与 FFmpeg#旧 API 与新代码边界|旧 API 与新代码边界]]\n\n旧书中的 av_register_all、avcodec_decode_video 等按历史接口理解；新工程依选定版本文档。\n\n[[00-知识地图/专题说明/13 RTC 媒体处理与 FFmpeg#13.4 RTC 接入与版本意识 · P1|学习说明与练习]]",
+      "x": 1465,
+      "y": 1370,
+      "width": 365,
+      "height": 300,
+      "color": "#8061B3"
+    }
+  ],
+  "edges": [
+    {
+      "id": "r-g0",
+      "fromNode": "root",
+      "fromSide": "bottom",
+      "toNode": "g0",
+      "toSide": "top",
+      "toEnd": "arrow",
+      "color": "#8061B3"
+    },
+    {
+      "id": "g0-p0",
+      "fromNode": "g0",
+      "fromSide": "left",
+      "toNode": "p0-0",
+      "toSide": "left",
+      "toEnd": "arrow",
+      "color": "#8061B3"
+    },
+    {
+      "id": "g0-p1",
+      "fromNode": "g0",
+      "fromSide": "left",
+      "toNode": "p0-1",
+      "toSide": "left",
+      "toEnd": "arrow",
+      "color": "#8061B3"
+    },
+    {
+      "id": "g0-p2",
+      "fromNode": "g0",
+      "fromSide": "left",
+      "toNode": "p0-2",
+      "toSide": "left",
+      "toEnd": "arrow",
+      "color": "#8061B3"
+    },
+    {
+      "id": "r-g1",
+      "fromNode": "root",
+      "fromSide": "bottom",
+      "toNode": "g1",
+      "toSide": "top",
+      "toEnd": "arrow",
+      "color": "#8061B3"
+    },
+    {
+      "id": "g1-p0",
+      "fromNode": "g1",
+      "fromSide": "left",
+      "toNode": "p1-0",
+      "toSide": "left",
+      "toEnd": "arrow",
+      "color": "#8061B3"
+    },
+    {
+      "id": "g1-p1",
+      "fromNode": "g1",
+      "fromSide": "left",
+      "toNode": "p1-1",
+      "toSide": "left",
+      "toEnd": "arrow",
+      "color": "#8061B3"
+    },
+    {
+      "id": "g1-p2",
+      "fromNode": "g1",
+      "fromSide": "left",
+      "toNode": "p1-2",
+      "toSide": "left",
+      "toEnd": "arrow",
+      "color": "#8061B3"
+    },
+    {
+      "id": "r-g2",
+      "fromNode": "root",
+      "fromSide": "bottom",
+      "toNode": "g2",
+      "toSide": "top",
+      "toEnd": "arrow",
+      "color": "#8061B3"
+    },
+    {
+      "id": "g2-p0",
+      "fromNode": "g2",
+      "fromSide": "left",
+      "toNode": "p2-0",
+      "toSide": "left",
+      "toEnd": "arrow",
+      "color": "#8061B3"
+    },
+    {
+      "id": "g2-p1",
+      "fromNode": "g2",
+      "fromSide": "left",
+      "toNode": "p2-1",
+      "toSide": "left",
+      "toEnd": "arrow",
+      "color": "#8061B3"
+    },
+    {
+      "id": "g2-p2",
+      "fromNode": "g2",
+      "fromSide": "left",
+      "toNode": "p2-2",
+      "toSide": "left",
+      "toEnd": "arrow",
+      "color": "#8061B3"
+    },
+    {
+      "id": "r-g3",
+      "fromNode": "root",
+      "fromSide": "bottom",
+      "toNode": "g3",
+      "toSide": "top",
+      "toEnd": "arrow",
+      "color": "#8061B3"
+    },
+    {
+      "id": "g3-p0",
+      "fromNode": "g3",
+      "fromSide": "left",
+      "toNode": "p3-0",
+      "toSide": "left",
+      "toEnd": "arrow",
+      "color": "#8061B3"
+    },
+    {
+      "id": "g3-p1",
+      "fromNode": "g3",
+      "fromSide": "left",
+      "toNode": "p3-1",
+      "toSide": "left",
+      "toEnd": "arrow",
+      "color": "#8061B3"
+    },
+    {
+      "id": "g3-p2",
+      "fromNode": "g3",
+      "fromSide": "left",
+      "toNode": "p3-2",
+      "toSide": "left",
+      "toEnd": "arrow",
+      "color": "#8061B3"
+    }
+  ]
+}

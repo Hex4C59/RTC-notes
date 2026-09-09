@@ -1,0 +1,320 @@
+{
+  "nodes": [
+    {
+      "id": "root",
+      "type": "text",
+      "text": "# 07 音频处理与 Opus\n\n[[00-知识地图/RTC 树状知识地图.canvas|返回 RTC 总树]] · [[00-知识地图/专题说明/07 音频处理与 Opus|本专题学习说明]]\n\n上到下：专题 → 知识组 → 具体知识点。点击知识点进入说明；组卡链接已有详解。",
+      "x": 520,
+      "y": 0,
+      "width": 720,
+      "height": 190,
+      "color": "#BA7618"
+    },
+    {
+      "id": "g0",
+      "type": "text",
+      "text": "## 07.1 音频编解码基础\n\nP0\n\n配套详解：[[音频编解码]] · [[AAC]] · [[Opus]]",
+      "x": 0,
+      "y": 300,
+      "width": 420,
+      "height": 250,
+      "color": "#BA7618"
+    },
+    {
+      "id": "p0-0",
+      "type": "text",
+      "text": "### [[00-知识地图/专题说明/07 音频处理与 Opus#PCM 与编码码流|PCM 与编码码流]]\n\n编码把样本压缩成比特流，解码恢复可播放样本；编码格式不等于文件容器。\n\n[[00-知识地图/专题说明/07 音频处理与 Opus#07.1 音频编解码基础 · P0|学习说明与练习]]",
+      "x": 55,
+      "y": 670,
+      "width": 365,
+      "height": 300,
+      "color": "#BA7618"
+    },
+    {
+      "id": "p0-1",
+      "type": "text",
+      "text": "### [[00-知识地图/专题说明/07 音频处理与 Opus#帧长、码率与算法延迟|帧长、码率与算法延迟]]\n\n帧长影响等待时间、包头开销和丢包影响范围；码率不是采样率。\n\n[[00-知识地图/专题说明/07 音频处理与 Opus#07.1 音频编解码基础 · P0|学习说明与练习]]",
+      "x": 55,
+      "y": 1020,
+      "width": 365,
+      "height": 300,
+      "color": "#BA7618"
+    },
+    {
+      "id": "p0-2",
+      "type": "text",
+      "text": "### [[00-知识地图/专题说明/07 音频处理与 Opus#Opus 与其他音频编码|Opus 与其他音频编码]]\n\n本路线优先接入 Opus；AAC、G.711、MP3 等先认识用途与差异，避免同时深挖所有编码器。\n\n[[00-知识地图/专题说明/07 音频处理与 Opus#07.1 音频编解码基础 · P0|学习说明与练习]]",
+      "x": 55,
+      "y": 1370,
+      "width": 365,
+      "height": 300,
+      "color": "#BA7618"
+    },
+    {
+      "id": "g1",
+      "type": "text",
+      "text": "## 07.2 Opus 工程接口\n\nP1\n\n配套详解：[[Opus]] · [[Opus RTP 负载格式]]",
+      "x": 470,
+      "y": 300,
+      "width": 420,
+      "height": 250,
+      "color": "#BA7618"
+    },
+    {
+      "id": "p1-0",
+      "type": "text",
+      "text": "### [[00-知识地图/专题说明/07 音频处理与 Opus#编码器与解码器生命周期|编码器与解码器生命周期]]\n\n学习 create/init、encode/decode、ctl、destroy；每条流独立管理状态和顺序。\n\n[[00-知识地图/专题说明/07 音频处理与 Opus#07.2 Opus 工程接口 · P1|学习说明与练习]]",
+      "x": 525,
+      "y": 670,
+      "width": 365,
+      "height": 300,
+      "color": "#BA7618"
+    },
+    {
+      "id": "p1-1",
+      "type": "text",
+      "text": "### [[00-知识地图/专题说明/07 音频处理与 Opus#frame_size 与返回值|frame_size 与返回值]]\n\n区分每声道样本数、总样本数和字节数；编码返回字节数，解码返回每声道样本数。\n\n[[00-知识地图/专题说明/07 音频处理与 Opus#07.2 Opus 工程接口 · P1|学习说明与练习]]",
+      "x": 525,
+      "y": 1020,
+      "width": 365,
+      "height": 300,
+      "color": "#BA7618"
+    },
+    {
+      "id": "p1-2",
+      "type": "text",
+      "text": "### [[00-知识地图/专题说明/07 音频处理与 Opus#码率、复杂度与 DTX|码率、复杂度与 DTX]]\n\n学习应用模式、CBR/VBR、复杂度和不连续发送；静音期间媒体时间仍然向前。\n\n[[00-知识地图/专题说明/07 音频处理与 Opus#07.2 Opus 工程接口 · P1|学习说明与练习]]",
+      "x": 525,
+      "y": 1370,
+      "width": 365,
+      "height": 300,
+      "color": "#BA7618"
+    },
+    {
+      "id": "g2",
+      "type": "text",
+      "text": "## 07.3 语音前处理\n\nP1\n\n配套详解：[[回声消除]] · [[RTC 音频预处理状态机]]",
+      "x": 940,
+      "y": 300,
+      "width": 420,
+      "height": 250,
+      "color": "#BA7618"
+    },
+    {
+      "id": "p2-0",
+      "type": "text",
+      "text": "### [[00-知识地图/专题说明/07 音频处理与 Opus#AEC 回声消除|AEC 回声消除]]\n\n利用播放参考与麦克风信号处理回声；理解声学路径、延迟对齐和双讲。\n\n[[00-知识地图/专题说明/07 音频处理与 Opus#07.3 语音前处理 · P1|学习说明与练习]]",
+      "x": 995,
+      "y": 670,
+      "width": 365,
+      "height": 300,
+      "color": "#BA7618"
+    },
+    {
+      "id": "p2-1",
+      "type": "text",
+      "text": "### [[00-知识地图/专题说明/07 音频处理与 Opus#NS 降噪与 AGC 增益控制|NS 降噪与 AGC 增益控制]]\n\n分别处理背景噪声和音量变化；知道过度处理可能损害语音。\n\n[[00-知识地图/专题说明/07 音频处理与 Opus#07.3 语音前处理 · P1|学习说明与练习]]",
+      "x": 995,
+      "y": 1020,
+      "width": 365,
+      "height": 300,
+      "color": "#BA7618"
+    },
+    {
+      "id": "p2-2",
+      "type": "text",
+      "text": "### [[00-知识地图/专题说明/07 音频处理与 Opus#VAD 与处理链整合|VAD 与处理链整合]]\n\nVAD 判断语音活动；认识预处理、编码、设备接口之间的格式和线程约束。\n\n[[00-知识地图/专题说明/07 音频处理与 Opus#07.3 语音前处理 · P1|学习说明与练习]]",
+      "x": 995,
+      "y": 1370,
+      "width": 365,
+      "height": 300,
+      "color": "#BA7618"
+    },
+    {
+      "id": "g3",
+      "type": "text",
+      "text": "## 07.4 丢失处理与算法选修\n\nP2\n\n配套详解：[[心理声学与 MDCT]] · [[FEC]] · [[NetEQ]]",
+      "x": 1410,
+      "y": 300,
+      "width": 420,
+      "height": 250,
+      "color": "#BA7618"
+    },
+    {
+      "id": "p3-0",
+      "type": "text",
+      "text": "### [[00-知识地图/专题说明/07 音频处理与 Opus#PLC 丢包隐藏|PLC 丢包隐藏]]\n\n数据来不及时生成替代声音以维持连续；它不是找回原始丢失字节。\n\n[[00-知识地图/专题说明/07 音频处理与 Opus#07.4 丢失处理与算法选修 · P2|学习说明与练习]]",
+      "x": 1465,
+      "y": 670,
+      "width": 365,
+      "height": 300,
+      "color": "#BA7618"
+    },
+    {
+      "id": "p3-1",
+      "type": "text",
+      "text": "### [[00-知识地图/专题说明/07 音频处理与 Opus#Opus 带内 FEC|Opus 带内 FEC]]\n\n理解从后续包的冗余信息恢复前一段语音及额外等待；启用参数不保证每包都有冗余。\n\n[[00-知识地图/专题说明/07 音频处理与 Opus#07.4 丢失处理与算法选修 · P2|学习说明与练习]]",
+      "x": 1465,
+      "y": 1020,
+      "width": 365,
+      "height": 300,
+      "color": "#BA7618"
+    },
+    {
+      "id": "p3-2",
+      "type": "text",
+      "text": "### [[00-知识地图/专题说明/07 音频处理与 Opus#信号处理与编码内部|信号处理与编码内部]]\n\n选修分帧加窗、频谱、滤波、LPC、MDCT、SILK/CELT；用实验理解后再读算法论文。\n\n[[00-知识地图/专题说明/07 音频处理与 Opus#07.4 丢失处理与算法选修 · P2|学习说明与练习]]",
+      "x": 1465,
+      "y": 1370,
+      "width": 365,
+      "height": 300,
+      "color": "#BA7618"
+    }
+  ],
+  "edges": [
+    {
+      "id": "r-g0",
+      "fromNode": "root",
+      "fromSide": "bottom",
+      "toNode": "g0",
+      "toSide": "top",
+      "toEnd": "arrow",
+      "color": "#BA7618"
+    },
+    {
+      "id": "g0-p0",
+      "fromNode": "g0",
+      "fromSide": "left",
+      "toNode": "p0-0",
+      "toSide": "left",
+      "toEnd": "arrow",
+      "color": "#BA7618"
+    },
+    {
+      "id": "g0-p1",
+      "fromNode": "g0",
+      "fromSide": "left",
+      "toNode": "p0-1",
+      "toSide": "left",
+      "toEnd": "arrow",
+      "color": "#BA7618"
+    },
+    {
+      "id": "g0-p2",
+      "fromNode": "g0",
+      "fromSide": "left",
+      "toNode": "p0-2",
+      "toSide": "left",
+      "toEnd": "arrow",
+      "color": "#BA7618"
+    },
+    {
+      "id": "r-g1",
+      "fromNode": "root",
+      "fromSide": "bottom",
+      "toNode": "g1",
+      "toSide": "top",
+      "toEnd": "arrow",
+      "color": "#BA7618"
+    },
+    {
+      "id": "g1-p0",
+      "fromNode": "g1",
+      "fromSide": "left",
+      "toNode": "p1-0",
+      "toSide": "left",
+      "toEnd": "arrow",
+      "color": "#BA7618"
+    },
+    {
+      "id": "g1-p1",
+      "fromNode": "g1",
+      "fromSide": "left",
+      "toNode": "p1-1",
+      "toSide": "left",
+      "toEnd": "arrow",
+      "color": "#BA7618"
+    },
+    {
+      "id": "g1-p2",
+      "fromNode": "g1",
+      "fromSide": "left",
+      "toNode": "p1-2",
+      "toSide": "left",
+      "toEnd": "arrow",
+      "color": "#BA7618"
+    },
+    {
+      "id": "r-g2",
+      "fromNode": "root",
+      "fromSide": "bottom",
+      "toNode": "g2",
+      "toSide": "top",
+      "toEnd": "arrow",
+      "color": "#BA7618"
+    },
+    {
+      "id": "g2-p0",
+      "fromNode": "g2",
+      "fromSide": "left",
+      "toNode": "p2-0",
+      "toSide": "left",
+      "toEnd": "arrow",
+      "color": "#BA7618"
+    },
+    {
+      "id": "g2-p1",
+      "fromNode": "g2",
+      "fromSide": "left",
+      "toNode": "p2-1",
+      "toSide": "left",
+      "toEnd": "arrow",
+      "color": "#BA7618"
+    },
+    {
+      "id": "g2-p2",
+      "fromNode": "g2",
+      "fromSide": "left",
+      "toNode": "p2-2",
+      "toSide": "left",
+      "toEnd": "arrow",
+      "color": "#BA7618"
+    },
+    {
+      "id": "r-g3",
+      "fromNode": "root",
+      "fromSide": "bottom",
+      "toNode": "g3",
+      "toSide": "top",
+      "toEnd": "arrow",
+      "color": "#BA7618"
+    },
+    {
+      "id": "g3-p0",
+      "fromNode": "g3",
+      "fromSide": "left",
+      "toNode": "p3-0",
+      "toSide": "left",
+      "toEnd": "arrow",
+      "color": "#BA7618"
+    },
+    {
+      "id": "g3-p1",
+      "fromNode": "g3",
+      "fromSide": "left",
+      "toNode": "p3-1",
+      "toSide": "left",
+      "toEnd": "arrow",
+      "color": "#BA7618"
+    },
+    {
+      "id": "g3-p2",
+      "fromNode": "g3",
+      "fromSide": "left",
+      "toNode": "p3-2",
+      "toSide": "left",
+      "toEnd": "arrow",
+      "color": "#BA7618"
+    }
+  ]
+}

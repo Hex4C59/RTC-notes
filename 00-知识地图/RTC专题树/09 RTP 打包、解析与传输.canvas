@@ -1,0 +1,39 @@
+{
+	"nodes":[
+		{"id":"root","type":"text","text":"# 09 RTP 打包、解析与传输\n\n[[00-知识地图/RTC 树状知识地图.canvas|返回 RTC 总树]] · [[00-知识地图/专题说明/09 RTP 打包、解析与传输|本专题学习说明]]\n\n上到下：专题 → 知识组 → 具体知识点。点击知识点进入说明；组卡链接已有详解。","x":520,"y":0,"width":720,"height":190,"color":"#00897B"},
+		{"id":"g0","type":"text","text":"## 09.1 协议定位与固定头\n\nP0\n\n配套详解：[[UDP IP Socket 与 MTU]] · [[RTP]]","x":0,"y":300,"width":420,"height":250,"color":"#00897B"},
+		{"id":"p0-0","type":"text","text":"### [[00-知识地图/专题说明/09 RTP 打包、解析与传输#RTP 与 UDP 的关系|RTP 与 UDP 的关系]]\n\nUDP 承载数据报；RTP 在媒体层补充序号、时钟、来源和负载解释信息，不保证可靠到达。\n\n[[00-知识地图/专题说明/09 RTP 打包、解析与传输#09.1 协议定位与固定头 · P0|学习说明与练习]]","x":55,"y":670,"width":365,"height":300,"color":"#00897B"},
+		{"id":"p0-1","type":"text","text":"### [[00-知识地图/专题说明/09 RTP 打包、解析与传输#序号、时间戳与 SSRC|序号、时间戳与 SSRC]]\n\n学习 16 位序号、32 位时间戳和同步源标识；SSRC 不能简单等同于用户账号。\n\n[[00-知识地图/专题说明/09 RTP 打包、解析与传输#09.1 协议定位与固定头 · P0|学习说明与练习]]","x":55,"y":1020,"width":365,"height":300,"color":"#00897B"},
+		{"id":"p0-2","type":"text","text":"### [[00-知识地图/专题说明/09 RTP 打包、解析与传输#PT、Marker 与可变头|PT、Marker 与可变头]]\n\n负载类型需要约定；Marker 语义随负载格式变化；解析时考虑 CSRC、扩展和填充。\n\n[[00-知识地图/专题说明/09 RTP 打包、解析与传输#09.1 协议定位与固定头 · P0|学习说明与练习]]","x":55,"y":1370,"width":365,"height":300,"color":"#00897B"},
+		{"id":"g1","type":"text","text":"## 09.2 发送与接收状态\n\nP1\n\n配套详解：[[RTP 流标识与复用]] · [[视频 RTP 接收与组帧状态机]]","x":470,"y":300,"width":420,"height":250,"color":"#00897B"},
+		{"id":"p1-0","type":"text","text":"### [[00-知识地图/专题说明/09 RTP 打包、解析与传输#序号回绕与扩展序号|序号回绕与扩展序号]]\n\n测试 65535 → 0；排序、丢包检测和缓存索引不能只按普通整数大小比较。\n\n[[00-知识地图/专题说明/09 RTP 打包、解析与传输#09.2 发送与接收状态 · P1|学习说明与练习]]","x":525,"y":670,"width":365,"height":300,"color":"#00897B"},
+		{"id":"p1-1","type":"text","text":"### [[00-知识地图/专题说明/09 RTP 打包、解析与传输#乱序、重复与源切换|乱序、重复与源切换]]\n\n维护每个源的状态；区分重复包、晚到包、明显异常包和流重启。\n\n[[00-知识地图/专题说明/09 RTP 打包、解析与传输#09.2 发送与接收状态 · P1|学习说明与练习]]","x":525,"y":1020,"width":365,"height":300,"color":"#00897B"},
+		{"id":"p1-2","type":"text","text":"### [[00-知识地图/专题说明/09 RTP 打包、解析与传输#安全的二进制解析|安全的二进制解析]]\n\n逐字段验证长度和范围；处理短包、损坏扩展、非法填充，避免越界读写。\n\n[[00-知识地图/专题说明/09 RTP 打包、解析与传输#09.2 发送与接收状态 · P1|学习说明与练习]]","x":525,"y":1370,"width":365,"height":300,"color":"#00897B"},
+		{"id":"g2","type":"text","text":"## 09.3 负载打包\n\nP1\n\n配套详解：[[Opus RTP 负载格式]] · [[H264 RTP 负载格式]]","x":940,"y":300,"width":420,"height":250,"color":"#00897B"},
+		{"id":"p2-0","type":"text","text":"### [[00-知识地图/专题说明/09 RTP 打包、解析与传输#Opus over RTP|Opus over RTP]]\n\n一个 RTP 负载装一个 Opus packet；该 packet 可含多个编码帧，时长要从正确语义确定。\n\n[[00-知识地图/专题说明/09 RTP 打包、解析与传输#09.3 负载打包 · P1|学习说明与练习]]","x":995,"y":670,"width":365,"height":300,"color":"#00897B"},
+		{"id":"p2-1","type":"text","text":"### [[00-知识地图/专题说明/09 RTP 打包、解析与传输#H.264 单包、聚合与分片|H.264 单包、聚合与分片]]\n\n学习 Single NAL Unit、STAP-A、FU-A；先实现单包/FU-A，再按协商范围增加支持。\n\n[[00-知识地图/专题说明/09 RTP 打包、解析与传输#09.3 负载打包 · P1|学习说明与练习]]","x":995,"y":1020,"width":365,"height":300,"color":"#00897B"},
+		{"id":"p2-2","type":"text","text":"### [[00-知识地图/专题说明/09 RTP 打包、解析与传输#MTU 与封装预算|MTU 与封装预算]]\n\nRTP 分片应考虑 IP、UDP、RTP 扩展和 SRTP 等开销；应用分片不同于 IP 分片。\n\n[[00-知识地图/专题说明/09 RTP 打包、解析与传输#09.3 负载打包 · P1|学习说明与练习]]","x":995,"y":1370,"width":365,"height":300,"color":"#00897B"},
+		{"id":"g3","type":"text","text":"## 09.4 扩展与互通\n\nP2\n\n配套详解：[[RTP 流标识与复用]] · [[RTP 头扩展]]","x":1410,"y":300,"width":420,"height":250,"color":"#00897B"},
+		{"id":"p3-0","type":"text","text":"### [[00-知识地图/专题说明/09 RTP 打包、解析与传输#头扩展与流标识|头扩展与流标识]]\n\n认识 MID、RID、音量等扩展；扩展标识和含义来自协商，不可任意硬编码。\n\n[[00-知识地图/专题说明/09 RTP 打包、解析与传输#09.4 扩展与互通 · P2|学习说明与练习]]","x":1465,"y":670,"width":365,"height":300,"color":"#00897B"},
+		{"id":"p3-1","type":"text","text":"### [[00-知识地图/专题说明/09 RTP 打包、解析与传输#RTP/RTCP 复用与 BUNDLE|RTP/RTCP 复用与 BUNDLE]]\n\n理解一个传输上可有多个媒体源，收包端需要正确识别协议及媒体归属。\n\n[[00-知识地图/专题说明/09 RTP 打包、解析与传输#09.4 扩展与互通 · P2|学习说明与练习]]","x":1465,"y":1020,"width":365,"height":300,"color":"#00897B"},
+		{"id":"p3-2","type":"text","text":"### [[00-知识地图/专题说明/09 RTP 打包、解析与传输#标准、抓包与互操作|标准、抓包与互操作]]\n\n本地自定义发送接收成功不代表标准互通；用抓包和独立实现核对线格式。\n\n[[00-知识地图/专题说明/09 RTP 打包、解析与传输#09.4 扩展与互通 · P2|学习说明与练习]]","x":1465,"y":1370,"width":365,"height":300,"color":"#00897B"}
+	],
+	"edges":[
+		{"id":"r-g0","fromNode":"root","fromSide":"bottom","toNode":"g0","toSide":"top","toEnd":"arrow","color":"#00897B"},
+		{"id":"g0-p0","fromNode":"g0","fromSide":"left","toNode":"p0-0","toSide":"left","toEnd":"arrow","color":"#00897B"},
+		{"id":"g0-p1","fromNode":"g0","fromSide":"left","toNode":"p0-1","toSide":"left","toEnd":"arrow","color":"#00897B"},
+		{"id":"g0-p2","fromNode":"g0","fromSide":"left","toNode":"p0-2","toSide":"left","toEnd":"arrow","color":"#00897B"},
+		{"id":"r-g1","fromNode":"root","fromSide":"bottom","toNode":"g1","toSide":"top","toEnd":"arrow","color":"#00897B"},
+		{"id":"g1-p0","fromNode":"g1","fromSide":"left","toNode":"p1-0","toSide":"left","toEnd":"arrow","color":"#00897B"},
+		{"id":"g1-p1","fromNode":"g1","fromSide":"left","toNode":"p1-1","toSide":"left","toEnd":"arrow","color":"#00897B"},
+		{"id":"g1-p2","fromNode":"g1","fromSide":"left","toNode":"p1-2","toSide":"left","toEnd":"arrow","color":"#00897B"},
+		{"id":"r-g2","fromNode":"root","fromSide":"bottom","toNode":"g2","toSide":"top","toEnd":"arrow","color":"#00897B"},
+		{"id":"g2-p0","fromNode":"g2","fromSide":"left","toNode":"p2-0","toSide":"left","toEnd":"arrow","color":"#00897B"},
+		{"id":"g2-p1","fromNode":"g2","fromSide":"left","toNode":"p2-1","toSide":"left","toEnd":"arrow","color":"#00897B"},
+		{"id":"g2-p2","fromNode":"g2","fromSide":"left","toNode":"p2-2","toSide":"left","toEnd":"arrow","color":"#00897B"},
+		{"id":"r-g3","fromNode":"root","fromSide":"bottom","toNode":"g3","toSide":"top","toEnd":"arrow","color":"#00897B"},
+		{"id":"g3-p0","fromNode":"g3","fromSide":"left","toNode":"p3-0","toSide":"left","toEnd":"arrow","color":"#00897B"},
+		{"id":"g3-p1","fromNode":"g3","fromSide":"left","toNode":"p3-1","toSide":"left","toEnd":"arrow","color":"#00897B"},
+		{"id":"g3-p2","fromNode":"g3","fromSide":"left","toNode":"p3-2","toSide":"left","toEnd":"arrow","color":"#00897B"}
+	]
+}

@@ -1,0 +1,320 @@
+{
+  "nodes": [
+    {
+      "id": "root",
+      "type": "text",
+      "text": "# 06 时间系统与音画同步\n\n[[00-知识地图/RTC 树状知识地图.canvas|返回 RTC 总树]] · [[00-知识地图/专题说明/06 时间系统与音画同步|本专题学习说明]]\n\n上到下：专题 → 知识组 → 具体知识点。点击知识点进入说明；组卡链接已有详解。",
+      "x": 520,
+      "y": 0,
+      "width": 720,
+      "height": 190,
+      "color": "#BA7618"
+    },
+    {
+      "id": "g0",
+      "type": "text",
+      "text": "## 06.1 时间的几种含义\n\nP0\n\n配套详解：[[时钟与时间戳]]",
+      "x": 0,
+      "y": 300,
+      "width": 420,
+      "height": 250,
+      "color": "#BA7618"
+    },
+    {
+      "id": "p0-0",
+      "type": "text",
+      "text": "### [[00-知识地图/专题说明/06 时间系统与音画同步#序号与时间戳|序号与时间戳]]\n\n序号表示包的顺序；时间戳标记媒体在时间轴上的位置，不是数据包大小。\n\n[[00-知识地图/专题说明/06 时间系统与音画同步#06.1 时间的几种含义 · P0|学习说明与练习]]",
+      "x": 55,
+      "y": 670,
+      "width": 365,
+      "height": 300,
+      "color": "#BA7618"
+    },
+    {
+      "id": "p0-1",
+      "type": "text",
+      "text": "### [[00-知识地图/专题说明/06 时间系统与音画同步#时钟频率与时间基|时钟频率与时间基]]\n\n一个 tick 持续多久取决于时钟；时间差 = tick 差 ÷ 频率，不能直接当毫秒。\n\n[[00-知识地图/专题说明/06 时间系统与音画同步#06.1 时间的几种含义 · P0|学习说明与练习]]",
+      "x": 55,
+      "y": 1020,
+      "width": 365,
+      "height": 300,
+      "color": "#BA7618"
+    },
+    {
+      "id": "p0-2",
+      "type": "text",
+      "text": "### [[00-知识地图/专题说明/06 时间系统与音画同步#墙上时钟与单调时钟|墙上时钟与单调时钟]]\n\n现实日期时间用于对齐和记录；本地超时/耗时应使用适合计时的单调时钟。\n\n[[00-知识地图/专题说明/06 时间系统与音画同步#06.1 时间的几种含义 · P0|学习说明与练习]]",
+      "x": 55,
+      "y": 1370,
+      "width": 365,
+      "height": 300,
+      "color": "#BA7618"
+    },
+    {
+      "id": "g1",
+      "type": "text",
+      "text": "## 06.2 RTP 媒体时钟\n\nP0\n\n配套详解：[[RTP]]",
+      "x": 470,
+      "y": 300,
+      "width": 420,
+      "height": 250,
+      "color": "#BA7618"
+    },
+    {
+      "id": "p1-0",
+      "type": "text",
+      "text": "### [[00-知识地图/专题说明/06 时间系统与音画同步#初始值、增长与回绕|初始值、增长与回绕]]\n\n理解随机起点、媒体驱动的变化及 32 位回绕；发送到达间隔不能代替媒体时间。\n\n[[00-知识地图/专题说明/06 时间系统与音画同步#06.2 RTP 媒体时钟 · P0|学习说明与练习]]",
+      "x": 525,
+      "y": 670,
+      "width": 365,
+      "height": 300,
+      "color": "#BA7618"
+    },
+    {
+      "id": "p1-1",
+      "type": "text",
+      "text": "### [[00-知识地图/专题说明/06 时间系统与音画同步#Opus 的 48 kHz RTP 时钟|Opus 的 48 kHz RTP 时钟]]\n\n即使输入 PCM 是 16 kHz，Opus RTP 仍以 48 kHz 计时；20 ms 对应 960 ticks。\n\n[[00-知识地图/专题说明/06 时间系统与音画同步#06.2 RTP 媒体时钟 · P0|学习说明与练习]]",
+      "x": 525,
+      "y": 1020,
+      "width": 365,
+      "height": 300,
+      "color": "#BA7618"
+    },
+    {
+      "id": "p1-2",
+      "type": "text",
+      "text": "### [[00-知识地图/专题说明/06 时间系统与音画同步#H.264 的 90 kHz RTP 时钟|H.264 的 90 kHz RTP 时钟]]\n\n30 fps 等间隔示例中相邻图像相差 3000 ticks；同一图像的分包共享采样时刻。\n\n[[00-知识地图/专题说明/06 时间系统与音画同步#06.2 RTP 媒体时钟 · P0|学习说明与练习]]",
+      "x": 525,
+      "y": 1370,
+      "width": 365,
+      "height": 300,
+      "color": "#BA7618"
+    },
+    {
+      "id": "g2",
+      "type": "text",
+      "text": "## 06.3 跨时间轴映射\n\nP1\n\n配套详解：[[PTS DTS 与时间基]] · [[RTCP]]",
+      "x": 940,
+      "y": 300,
+      "width": 420,
+      "height": 250,
+      "color": "#BA7618"
+    },
+    {
+      "id": "p2-0",
+      "type": "text",
+      "text": "### [[00-知识地图/专题说明/06 时间系统与音画同步#PTS、DTS 与 time_base|PTS、DTS 与 time_base]]\n\n区分显示时刻和解码时刻，换时间基要正确缩放；不要把容器时间戳直接照搬。\n\n[[00-知识地图/专题说明/06 时间系统与音画同步#06.3 跨时间轴映射 · P1|学习说明与练习]]",
+      "x": 995,
+      "y": 670,
+      "width": 365,
+      "height": 300,
+      "color": "#BA7618"
+    },
+    {
+      "id": "p2-1",
+      "type": "text",
+      "text": "### [[00-知识地图/专题说明/06 时间系统与音画同步#NTP 格式时间与 RTCP SR|NTP 格式时间与 RTCP SR]]\n\nSR 提供某个对应时刻的 NTP 格式时间和 RTP 时间，帮助建立媒体到参考时间的映射。\n\n[[00-知识地图/专题说明/06 时间系统与音画同步#06.3 跨时间轴映射 · P1|学习说明与练习]]",
+      "x": 995,
+      "y": 1020,
+      "width": 365,
+      "height": 300,
+      "color": "#BA7618"
+    },
+    {
+      "id": "p2-2",
+      "type": "text",
+      "text": "### [[00-知识地图/专题说明/06 时间系统与音画同步#音频时钟、视频时钟与漂移|音频时钟、视频时钟与漂移]]\n\n不同设备/媒体时钟可有偏移和速率差；直接比较音频、视频 RTP 数值没有意义。\n\n[[00-知识地图/专题说明/06 时间系统与音画同步#06.3 跨时间轴映射 · P1|学习说明与练习]]",
+      "x": 995,
+      "y": 1370,
+      "width": 365,
+      "height": 300,
+      "color": "#BA7618"
+    },
+    {
+      "id": "g3",
+      "type": "text",
+      "text": "## 06.4 同步与测量边界\n\nP1\n\n配套详解：[[音视频同步]] · [[播放器队列与主时钟]]",
+      "x": 1410,
+      "y": 300,
+      "width": 420,
+      "height": 250,
+      "color": "#BA7618"
+    },
+    {
+      "id": "p3-0",
+      "type": "text",
+      "text": "### [[00-知识地图/专题说明/06 时间系统与音画同步#播放计划与主时钟|播放计划与主时钟]]\n\n先映射到共同时间轴，再决定视频等待或丢帧、音频缓冲或调节播放节奏。\n\n[[00-知识地图/专题说明/06 时间系统与音画同步#06.4 同步与测量边界 · P1|学习说明与练习]]",
+      "x": 1465,
+      "y": 670,
+      "width": 365,
+      "height": 300,
+      "color": "#BA7618"
+    },
+    {
+      "id": "p3-1",
+      "type": "text",
+      "text": "### [[00-知识地图/专题说明/06 时间系统与音画同步#RTT 与单向延迟|RTT 与单向延迟]]\n\n没有时钟关系和误差分析，不能用两台机器的时间戳相减就得到可信单向延迟。\n\n[[00-知识地图/专题说明/06 时间系统与音画同步#06.4 同步与测量边界 · P1|学习说明与练习]]",
+      "x": 1465,
+      "y": 1020,
+      "width": 365,
+      "height": 300,
+      "color": "#BA7618"
+    },
+    {
+      "id": "p3-2",
+      "type": "text",
+      "text": "### [[00-知识地图/专题说明/06 时间系统与音画同步#时间异常与长时间运行|时间异常与长时间运行]]\n\n测试时间跳变、时间戳回绕、设备重启和持续漂移，避免通话越久越不同步。\n\n[[00-知识地图/专题说明/06 时间系统与音画同步#06.4 同步与测量边界 · P1|学习说明与练习]]",
+      "x": 1465,
+      "y": 1370,
+      "width": 365,
+      "height": 300,
+      "color": "#BA7618"
+    }
+  ],
+  "edges": [
+    {
+      "id": "r-g0",
+      "fromNode": "root",
+      "fromSide": "bottom",
+      "toNode": "g0",
+      "toSide": "top",
+      "toEnd": "arrow",
+      "color": "#BA7618"
+    },
+    {
+      "id": "g0-p0",
+      "fromNode": "g0",
+      "fromSide": "left",
+      "toNode": "p0-0",
+      "toSide": "left",
+      "toEnd": "arrow",
+      "color": "#BA7618"
+    },
+    {
+      "id": "g0-p1",
+      "fromNode": "g0",
+      "fromSide": "left",
+      "toNode": "p0-1",
+      "toSide": "left",
+      "toEnd": "arrow",
+      "color": "#BA7618"
+    },
+    {
+      "id": "g0-p2",
+      "fromNode": "g0",
+      "fromSide": "left",
+      "toNode": "p0-2",
+      "toSide": "left",
+      "toEnd": "arrow",
+      "color": "#BA7618"
+    },
+    {
+      "id": "r-g1",
+      "fromNode": "root",
+      "fromSide": "bottom",
+      "toNode": "g1",
+      "toSide": "top",
+      "toEnd": "arrow",
+      "color": "#BA7618"
+    },
+    {
+      "id": "g1-p0",
+      "fromNode": "g1",
+      "fromSide": "left",
+      "toNode": "p1-0",
+      "toSide": "left",
+      "toEnd": "arrow",
+      "color": "#BA7618"
+    },
+    {
+      "id": "g1-p1",
+      "fromNode": "g1",
+      "fromSide": "left",
+      "toNode": "p1-1",
+      "toSide": "left",
+      "toEnd": "arrow",
+      "color": "#BA7618"
+    },
+    {
+      "id": "g1-p2",
+      "fromNode": "g1",
+      "fromSide": "left",
+      "toNode": "p1-2",
+      "toSide": "left",
+      "toEnd": "arrow",
+      "color": "#BA7618"
+    },
+    {
+      "id": "r-g2",
+      "fromNode": "root",
+      "fromSide": "bottom",
+      "toNode": "g2",
+      "toSide": "top",
+      "toEnd": "arrow",
+      "color": "#BA7618"
+    },
+    {
+      "id": "g2-p0",
+      "fromNode": "g2",
+      "fromSide": "left",
+      "toNode": "p2-0",
+      "toSide": "left",
+      "toEnd": "arrow",
+      "color": "#BA7618"
+    },
+    {
+      "id": "g2-p1",
+      "fromNode": "g2",
+      "fromSide": "left",
+      "toNode": "p2-1",
+      "toSide": "left",
+      "toEnd": "arrow",
+      "color": "#BA7618"
+    },
+    {
+      "id": "g2-p2",
+      "fromNode": "g2",
+      "fromSide": "left",
+      "toNode": "p2-2",
+      "toSide": "left",
+      "toEnd": "arrow",
+      "color": "#BA7618"
+    },
+    {
+      "id": "r-g3",
+      "fromNode": "root",
+      "fromSide": "bottom",
+      "toNode": "g3",
+      "toSide": "top",
+      "toEnd": "arrow",
+      "color": "#BA7618"
+    },
+    {
+      "id": "g3-p0",
+      "fromNode": "g3",
+      "fromSide": "left",
+      "toNode": "p3-0",
+      "toSide": "left",
+      "toEnd": "arrow",
+      "color": "#BA7618"
+    },
+    {
+      "id": "g3-p1",
+      "fromNode": "g3",
+      "fromSide": "left",
+      "toNode": "p3-1",
+      "toSide": "left",
+      "toEnd": "arrow",
+      "color": "#BA7618"
+    },
+    {
+      "id": "g3-p2",
+      "fromNode": "g3",
+      "fromSide": "left",
+      "toNode": "p3-2",
+      "toSide": "left",
+      "toEnd": "arrow",
+      "color": "#BA7618"
+    }
+  ]
+}

@@ -1,0 +1,76 @@
+{
+  "nodes": [
+    {
+      "id": "root",
+      "type": "text",
+      "text": "# 旧版快捷视图：会话与协商\n\n[[00-知识地图/RTC 树状知识地图.canvas|返回 RTC 总树]] · [[会话与信令地图|主题笔记]]\n\n旧分类快捷查阅；学习请从 [[RTC 知识总览|阅读首页]] 进入。",
+      "x": 410,
+      "y": 0,
+      "width": 440,
+      "height": 150,
+      "color": "#2788D1"
+    },
+    {
+      "id": "group-0",
+      "type": "text",
+      "text": "## 会话控制\n\n- [[WebRTC 会话生命周期]]\n\n- [[信令服务器]]\n\n- [[SIP]]",
+      "x": 0,
+      "y": 300,
+      "width": 380,
+      "height": 290,
+      "color": "#2788D1"
+    },
+    {
+      "id": "group-1",
+      "type": "text",
+      "text": "## 能力与媒体协商\n\n- [[Offer Answer]]\n\n- [[SDP]]\n\n- [[MediaStream Track 与 Transceiver]]",
+      "x": 440,
+      "y": 300,
+      "width": 380,
+      "height": 290,
+      "color": "#2788D1"
+    },
+    {
+      "id": "group-2",
+      "type": "text",
+      "text": "## 数据消息\n\n- [[RTCDataChannel 与 SCTP]]",
+      "x": 880,
+      "y": 300,
+      "width": 380,
+      "height": 260,
+      "color": "#2788D1"
+    }
+  ],
+  "edges": [
+    {
+      "id": "root-group-0",
+      "fromNode": "root",
+      "fromSide": "bottom",
+      "toNode": "group-0",
+      "toSide": "top",
+      "fromEnd": "none",
+      "toEnd": "arrow",
+      "color": "#2788D1"
+    },
+    {
+      "id": "root-group-1",
+      "fromNode": "root",
+      "fromSide": "bottom",
+      "toNode": "group-1",
+      "toSide": "top",
+      "fromEnd": "none",
+      "toEnd": "arrow",
+      "color": "#2788D1"
+    },
+    {
+      "id": "root-group-2",
+      "fromNode": "root",
+      "fromSide": "bottom",
+      "toNode": "group-2",
+      "toSide": "top",
+      "fromEnd": "none",
+      "toEnd": "arrow",
+      "color": "#2788D1"
+    }
+  ]
+}

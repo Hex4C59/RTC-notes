@@ -1,0 +1,320 @@
+{
+  "nodes": [
+    {
+      "id": "root",
+      "type": "text",
+      "text": "# 03 ICE、STUN、TURN 与传输安全\n\n[[00-知识地图/RTC 树状知识地图.canvas|返回 RTC 总树]] · [[00-知识地图/专题说明/03 ICE、STUN、TURN 与传输安全|本专题学习说明]]\n\n上到下：专题 → 知识组 → 具体知识点。点击知识点进入说明；组卡链接已有详解。",
+      "x": 520,
+      "y": 0,
+      "width": 720,
+      "height": 190,
+      "color": "#2788D1"
+    },
+    {
+      "id": "g0",
+      "type": "text",
+      "text": "## 03.1 网络连通基础\n\nP0\n\n配套详解：[[NAT 映射与过滤行为]] · [[STUN]] · [[TURN]]",
+      "x": 0,
+      "y": 300,
+      "width": 420,
+      "height": 250,
+      "color": "#2788D1"
+    },
+    {
+      "id": "p0-0",
+      "type": "text",
+      "text": "### [[00-知识地图/专题说明/03 ICE、STUN、TURN 与传输安全#NAT 映射与过滤|NAT 映射与过滤]]\n\n理解本地地址与外部可见地址可能不同；不要仅靠传统 NAT 分类断言一定能打洞。\n\n[[00-知识地图/专题说明/03 ICE、STUN、TURN 与传输安全#03.1 网络连通基础 · P0|学习说明与练习]]",
+      "x": 55,
+      "y": 670,
+      "width": 365,
+      "height": 300,
+      "color": "#2788D1"
+    },
+    {
+      "id": "p0-1",
+      "type": "text",
+      "text": "### [[00-知识地图/专题说明/03 ICE、STUN、TURN 与传输安全#STUN 的发现与检查作用|STUN 的发现与检查作用]]\n\n学习 Binding 及反射地址；STUN 是工具，不是保证所有网络直连成功的万能协议。\n\n[[00-知识地图/专题说明/03 ICE、STUN、TURN 与传输安全#03.1 网络连通基础 · P0|学习说明与练习]]",
+      "x": 55,
+      "y": 1020,
+      "width": 365,
+      "height": 300,
+      "color": "#2788D1"
+    },
+    {
+      "id": "p0-2",
+      "type": "text",
+      "text": "### [[00-知识地图/专题说明/03 ICE、STUN、TURN 与传输安全#TURN 中继|TURN 中继]]\n\n直连不合适或不可用时可用中继候选；中继服务与 SFU 的职责不同。\n\n[[00-知识地图/专题说明/03 ICE、STUN、TURN 与传输安全#03.1 网络连通基础 · P0|学习说明与练习]]",
+      "x": 55,
+      "y": 1370,
+      "width": 365,
+      "height": 300,
+      "color": "#2788D1"
+    },
+    {
+      "id": "g1",
+      "type": "text",
+      "text": "## 03.2 ICE 建连过程\n\nP1\n\n配套详解：[[ICE]] · [[ICE 候选与候选对]] · [[ICE 连通性检查与选路]] · [[ICE Restart]]",
+      "x": 470,
+      "y": 300,
+      "width": 420,
+      "height": 250,
+      "color": "#2788D1"
+    },
+    {
+      "id": "p1-0",
+      "type": "text",
+      "text": "### [[00-知识地图/专题说明/03 ICE、STUN、TURN 与传输安全#候选与候选对|候选与候选对]]\n\n认识 host、srflx、prflx、relay；双方组合候选并检查路径连通性。\n\n[[00-知识地图/专题说明/03 ICE、STUN、TURN 与传输安全#03.2 ICE 建连过程 · P1|学习说明与练习]]",
+      "x": 525,
+      "y": 670,
+      "width": 365,
+      "height": 300,
+      "color": "#2788D1"
+    },
+    {
+      "id": "p1-1",
+      "type": "text",
+      "text": "### [[00-知识地图/专题说明/03 ICE、STUN、TURN 与传输安全#收集、检查、提名与选路|收集、检查、提名与选路]]\n\n理解 ICE controlling/controlled、连通性检查和选中候选对，不只背三种服务器名字。\n\n[[00-知识地图/专题说明/03 ICE、STUN、TURN 与传输安全#03.2 ICE 建连过程 · P1|学习说明与练习]]",
+      "x": 525,
+      "y": 1020,
+      "width": 365,
+      "height": 300,
+      "color": "#2788D1"
+    },
+    {
+      "id": "p1-2",
+      "type": "text",
+      "text": "### [[00-知识地图/专题说明/03 ICE、STUN、TURN 与传输安全#Trickle ICE 与 ICE restart|Trickle ICE 与 ICE restart]]\n\n候选可逐步交换；网络变化时可能需要重新建连，状态恢复必须可观察。\n\n[[00-知识地图/专题说明/03 ICE、STUN、TURN 与传输安全#03.2 ICE 建连过程 · P1|学习说明与练习]]",
+      "x": 525,
+      "y": 1370,
+      "width": 365,
+      "height": 300,
+      "color": "#2788D1"
+    },
+    {
+      "id": "g2",
+      "type": "text",
+      "text": "## 03.3 加密与身份\n\nP1\n\n配套详解：[[DTLS]] · [[SRTP]] · [[SRTP 与 SRTCP 报文保护]]",
+      "x": 940,
+      "y": 300,
+      "width": 420,
+      "height": 250,
+      "color": "#2788D1"
+    },
+    {
+      "id": "p2-0",
+      "type": "text",
+      "text": "### [[00-知识地图/专题说明/03 ICE、STUN、TURN 与传输安全#DTLS 与 SRTP/SRTCP|DTLS 与 SRTP/SRTCP]]\n\n理解握手/密钥建立与媒体保护的分工；WebRTC 媒体不是简单当普通 TLS 字节流发送。\n\n[[00-知识地图/专题说明/03 ICE、STUN、TURN 与传输安全#03.3 加密与身份 · P1|学习说明与练习]]",
+      "x": 995,
+      "y": 670,
+      "width": 365,
+      "height": 300,
+      "color": "#2788D1"
+    },
+    {
+      "id": "p2-1",
+      "type": "text",
+      "text": "### [[00-知识地图/专题说明/03 ICE、STUN、TURN 与传输安全#指纹、完整性与抗重放|指纹、完整性与抗重放]]\n\n认识证书指纹、认证和重放防护；仅“看不到明文”不足以说明安全性完整。\n\n[[00-知识地图/专题说明/03 ICE、STUN、TURN 与传输安全#03.3 加密与身份 · P1|学习说明与练习]]",
+      "x": 995,
+      "y": 1020,
+      "width": 365,
+      "height": 300,
+      "color": "#2788D1"
+    },
+    {
+      "id": "p2-2",
+      "type": "text",
+      "text": "### [[00-知识地图/专题说明/03 ICE、STUN、TURN 与传输安全#链路加密与端到端加密|链路加密与端到端加密]]\n\n端点到 SFU 的加密不自动等于参会者之间 E2EE，要明确谁持有密钥、能看到什么。\n\n[[00-知识地图/专题说明/03 ICE、STUN、TURN 与传输安全#03.3 加密与身份 · P1|学习说明与练习]]",
+      "x": 995,
+      "y": 1370,
+      "width": 365,
+      "height": 300,
+      "color": "#2788D1"
+    },
+    {
+      "id": "g3",
+      "type": "text",
+      "text": "## 03.4 部署与失败诊断\n\nP2\n\n配套详解：[[ICE 与 TURN 诊断]]",
+      "x": 1410,
+      "y": 300,
+      "width": 420,
+      "height": 250,
+      "color": "#2788D1"
+    },
+    {
+      "id": "p3-0",
+      "type": "text",
+      "text": "### [[00-知识地图/专题说明/03 ICE、STUN、TURN 与传输安全#TURN 生命周期与凭据|TURN 生命周期与凭据]]\n\n认识 allocation、permission、channel、refresh；控制凭据有效期和滥用风险。\n\n[[00-知识地图/专题说明/03 ICE、STUN、TURN 与传输安全#03.4 部署与失败诊断 · P2|学习说明与练习]]",
+      "x": 1465,
+      "y": 670,
+      "width": 365,
+      "height": 300,
+      "color": "#2788D1"
+    },
+    {
+      "id": "p3-1",
+      "type": "text",
+      "text": "### [[00-知识地图/专题说明/03 ICE、STUN、TURN 与传输安全#受限网络与传输回退|受限网络与传输回退]]\n\n理解 UDP 被限制时的替代路径与额外延迟；不能承诺任意防火墙下必然可通。\n\n[[00-知识地图/专题说明/03 ICE、STUN、TURN 与传输安全#03.4 部署与失败诊断 · P2|学习说明与练习]]",
+      "x": 1465,
+      "y": 1020,
+      "width": 365,
+      "height": 300,
+      "color": "#2788D1"
+    },
+    {
+      "id": "p3-2",
+      "type": "text",
+      "text": "### [[00-知识地图/专题说明/03 ICE、STUN、TURN 与传输安全#网络切换与持续可达性|网络切换与持续可达性]]\n\n检查路径失效、保活/同意性检查和会话恢复；记录实际采用的候选类型。\n\n[[00-知识地图/专题说明/03 ICE、STUN、TURN 与传输安全#03.4 部署与失败诊断 · P2|学习说明与练习]]",
+      "x": 1465,
+      "y": 1370,
+      "width": 365,
+      "height": 300,
+      "color": "#2788D1"
+    }
+  ],
+  "edges": [
+    {
+      "id": "r-g0",
+      "fromNode": "root",
+      "fromSide": "bottom",
+      "toNode": "g0",
+      "toSide": "top",
+      "toEnd": "arrow",
+      "color": "#2788D1"
+    },
+    {
+      "id": "g0-p0",
+      "fromNode": "g0",
+      "fromSide": "left",
+      "toNode": "p0-0",
+      "toSide": "left",
+      "toEnd": "arrow",
+      "color": "#2788D1"
+    },
+    {
+      "id": "g0-p1",
+      "fromNode": "g0",
+      "fromSide": "left",
+      "toNode": "p0-1",
+      "toSide": "left",
+      "toEnd": "arrow",
+      "color": "#2788D1"
+    },
+    {
+      "id": "g0-p2",
+      "fromNode": "g0",
+      "fromSide": "left",
+      "toNode": "p0-2",
+      "toSide": "left",
+      "toEnd": "arrow",
+      "color": "#2788D1"
+    },
+    {
+      "id": "r-g1",
+      "fromNode": "root",
+      "fromSide": "bottom",
+      "toNode": "g1",
+      "toSide": "top",
+      "toEnd": "arrow",
+      "color": "#2788D1"
+    },
+    {
+      "id": "g1-p0",
+      "fromNode": "g1",
+      "fromSide": "left",
+      "toNode": "p1-0",
+      "toSide": "left",
+      "toEnd": "arrow",
+      "color": "#2788D1"
+    },
+    {
+      "id": "g1-p1",
+      "fromNode": "g1",
+      "fromSide": "left",
+      "toNode": "p1-1",
+      "toSide": "left",
+      "toEnd": "arrow",
+      "color": "#2788D1"
+    },
+    {
+      "id": "g1-p2",
+      "fromNode": "g1",
+      "fromSide": "left",
+      "toNode": "p1-2",
+      "toSide": "left",
+      "toEnd": "arrow",
+      "color": "#2788D1"
+    },
+    {
+      "id": "r-g2",
+      "fromNode": "root",
+      "fromSide": "bottom",
+      "toNode": "g2",
+      "toSide": "top",
+      "toEnd": "arrow",
+      "color": "#2788D1"
+    },
+    {
+      "id": "g2-p0",
+      "fromNode": "g2",
+      "fromSide": "left",
+      "toNode": "p2-0",
+      "toSide": "left",
+      "toEnd": "arrow",
+      "color": "#2788D1"
+    },
+    {
+      "id": "g2-p1",
+      "fromNode": "g2",
+      "fromSide": "left",
+      "toNode": "p2-1",
+      "toSide": "left",
+      "toEnd": "arrow",
+      "color": "#2788D1"
+    },
+    {
+      "id": "g2-p2",
+      "fromNode": "g2",
+      "fromSide": "left",
+      "toNode": "p2-2",
+      "toSide": "left",
+      "toEnd": "arrow",
+      "color": "#2788D1"
+    },
+    {
+      "id": "r-g3",
+      "fromNode": "root",
+      "fromSide": "bottom",
+      "toNode": "g3",
+      "toSide": "top",
+      "toEnd": "arrow",
+      "color": "#2788D1"
+    },
+    {
+      "id": "g3-p0",
+      "fromNode": "g3",
+      "fromSide": "left",
+      "toNode": "p3-0",
+      "toSide": "left",
+      "toEnd": "arrow",
+      "color": "#2788D1"
+    },
+    {
+      "id": "g3-p1",
+      "fromNode": "g3",
+      "fromSide": "left",
+      "toNode": "p3-1",
+      "toSide": "left",
+      "toEnd": "arrow",
+      "color": "#2788D1"
+    },
+    {
+      "id": "g3-p2",
+      "fromNode": "g3",
+      "fromSide": "left",
+      "toNode": "p3-2",
+      "toSide": "left",
+      "toEnd": "arrow",
+      "color": "#2788D1"
+    }
+  ]
+}

@@ -1,0 +1,21 @@
+{
+	"nodes":[
+		{"id":"root","type":"text","text":"# RTC 工程师学习路线\n\n[[RTC 知识总览|阅读首页]] · [[00-知识地图/学习路线/学习进度模板|我的学习进度]] · [[00-知识地图/RTC 树状知识地图.canvas|完整知识树]]\n\n按阶段练习推进；阅读、复述和实验分别记录。浏览器最小通话可在了解会话与安全后提前尝试，其余阶段仍独立验收。","x":0,"y":0,"width":820,"height":190,"color":"#526477"},
+		{"id":"s0","type":"text","text":"## 01 理解媒体与时间\n\n- [[00-知识地图/RTC专题树/01 RTC 系统与低延迟目标.canvas|01 RTC 系统与低延迟目标]]\n- [[00-知识地图/RTC专题树/05 音视频数据、采集与播放.canvas|05 音视频数据、采集与播放]]\n- [[00-知识地图/RTC专题树/06 时间系统与音画同步.canvas|06 时间系统与音画同步]]\n\n验收：能说明一帧声音的数据路径，算清 PCM、媒体时长与 RTP 时钟。","x":0,"y":300,"width":820,"height":280,"color":"#2788D1"},
+		{"id":"s1","type":"text","text":"## 02 本地音频闭环\n\n- [[00-知识地图/RTC专题树/07 音频处理与 Opus.canvas|07 音频处理与 Opus]]\n- [[00-知识地图/RTC专题树/13 RTC 媒体处理与 FFmpeg.canvas|13 RTC 媒体处理与 FFmpeg]]\n\n验收：用固定输入完成 Opus 编解码，正确处理引用、状态与时间基。","x":0,"y":680,"width":820,"height":280,"color":"#BA7618"},
+		{"id":"s2","type":"text","text":"## 03 最小实时传输\n\n- [[00-知识地图/RTC专题树/09 RTP 打包、解析与传输.canvas|09 RTP 打包、解析与传输]]\n- [[00-知识地图/RTC专题树/11 接收端 Jitter Buffer 与 NetEQ.canvas|11 接收端 Jitter Buffer 与 NetEQ]]\n\n验收：通过 RTP/UDP 收发音频，处理乱序、去重、晚到与缓冲上限。","x":0,"y":1060,"width":820,"height":280,"color":"#00897B"},
+		{"id":"s3","type":"text","text":"## 04 会话与安全接通\n\n- [[00-知识地图/RTC专题树/02 信令与 SDP 协商.canvas|02 信令与 SDP 协商]]\n- [[00-知识地图/RTC专题树/03 ICE、STUN、TURN 与传输安全.canvas|03 ICE、STUN、TURN 与传输安全]]\n- [[00-知识地图/RTC专题树/04 WebRTC 应用接入与源码阅读.canvas|04 WebRTC 应用接入与源码阅读]]\n\n验收：完成协商、ICE 直连或中继及安全传输，并验证双向媒体。","x":0,"y":1440,"width":820,"height":280,"color":"#8061B3"},
+		{"id":"s4","type":"text","text":"## 05 视频、反馈与弱网\n\n- [[00-知识地图/RTC专题树/08 视频编码与 H.264.canvas|08 视频编码与 H.264]]\n- [[00-知识地图/RTC专题树/10 RTCP 与质量反馈.canvas|10 RTCP 与质量反馈]]\n- [[00-知识地图/RTC专题树/12 丢包恢复、带宽估计与拥塞控制.canvas|12 丢包恢复、带宽估计与拥塞控制]]\n\n验收：加入视频打包、组帧与同步，用可重复实验比较恢复、码率和延迟。","x":0,"y":1820,"width":820,"height":280,"color":"#2788D1"},
+		{"id":"s5","type":"text","text":"## 06 客户端与多人会议\n\n- [[00-知识地图/RTC专题树/14 RTC 终端设备与生命周期.canvas|14 RTC 终端设备与生命周期]]\n- [[00-知识地图/RTC专题树/15 SFU 与多人通信系统.canvas|15 SFU 与多人通信系统]]\n\n验收：处理设备与会话生命周期，解释 SFU 订阅、选层、流量和容量。","x":0,"y":2200,"width":820,"height":280,"color":"#BA7618"},
+		{"id":"s6","type":"text","text":"## 07 持续测量与排障\n\n- [[00-知识地图/RTC专题树/16 测试、测量、排障与性能.canvas|16 测试、测量、排障与性能]]\n\n验收：提交环境、参数、日志、抓包及对照结果；此阶段贯穿所有步骤。","x":0,"y":2580,"width":820,"height":280,"color":"#00897B"}
+	],
+	"edges":[
+		{"id":"e0","fromNode":"root","fromSide":"bottom","toNode":"s0","toSide":"top","toEnd":"arrow","color":"#526477"},
+		{"id":"e1","fromNode":"s0","fromSide":"bottom","toNode":"s1","toSide":"top","toEnd":"arrow","color":"#526477"},
+		{"id":"e2","fromNode":"s1","fromSide":"bottom","toNode":"s2","toSide":"top","toEnd":"arrow","color":"#526477"},
+		{"id":"e3","fromNode":"s2","fromSide":"bottom","toNode":"s3","toSide":"top","toEnd":"arrow","color":"#526477"},
+		{"id":"e4","fromNode":"s3","fromSide":"bottom","toNode":"s4","toSide":"top","toEnd":"arrow","color":"#526477"},
+		{"id":"e5","fromNode":"s4","fromSide":"bottom","toNode":"s5","toSide":"top","toEnd":"arrow","color":"#526477"},
+		{"id":"e6","fromNode":"s5","fromSide":"bottom","toNode":"s6","toSide":"top","toEnd":"arrow","color":"#526477"}
+	]
+}

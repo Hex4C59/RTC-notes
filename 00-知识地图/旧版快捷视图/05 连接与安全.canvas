@@ -1,0 +1,76 @@
+{
+  "nodes": [
+    {
+      "id": "root",
+      "type": "text",
+      "text": "# 旧版快捷视图：连接与安全\n\n[[00-知识地图/RTC 树状知识地图.canvas|返回 RTC 总树]] · [[连接与安全地图|主题笔记]]\n\n旧分类快捷查阅；学习请从 [[RTC 知识总览|阅读首页]] 进入。",
+      "x": 410,
+      "y": 0,
+      "width": 440,
+      "height": 150,
+      "color": "#2788D1"
+    },
+    {
+      "id": "group-0",
+      "type": "text",
+      "text": "## 地址与候选\n\n- [[NAT 映射与过滤行为]]\n\n- [[STUN]]\n\n- [[ICE 候选与候选对]]",
+      "x": 0,
+      "y": 300,
+      "width": 380,
+      "height": 290,
+      "color": "#2788D1"
+    },
+    {
+      "id": "group-1",
+      "type": "text",
+      "text": "## 选路与恢复\n\n- [[ICE]]\n\n- [[ICE 连通性检查与选路]]\n\n- [[ICE Restart]]\n\n- [[TURN]]",
+      "x": 440,
+      "y": 300,
+      "width": 380,
+      "height": 350,
+      "color": "#2788D1"
+    },
+    {
+      "id": "group-2",
+      "type": "text",
+      "text": "## 安全传输\n\n- [[DTLS]]\n\n- [[SRTP]]",
+      "x": 880,
+      "y": 300,
+      "width": 380,
+      "height": 260,
+      "color": "#2788D1"
+    }
+  ],
+  "edges": [
+    {
+      "id": "root-group-0",
+      "fromNode": "root",
+      "fromSide": "bottom",
+      "toNode": "group-0",
+      "toSide": "top",
+      "fromEnd": "none",
+      "toEnd": "arrow",
+      "color": "#2788D1"
+    },
+    {
+      "id": "root-group-1",
+      "fromNode": "root",
+      "fromSide": "bottom",
+      "toNode": "group-1",
+      "toSide": "top",
+      "fromEnd": "none",
+      "toEnd": "arrow",
+      "color": "#2788D1"
+    },
+    {
+      "id": "root-group-2",
+      "fromNode": "root",
+      "fromSide": "bottom",
+      "toNode": "group-2",
+      "toSide": "top",
+      "fromEnd": "none",
+      "toEnd": "arrow",
+      "color": "#2788D1"
+    }
+  ]
+}

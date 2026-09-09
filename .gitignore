@@ -1,0 +1,26 @@
+# Local Obsidian settings and recovery data
+/.obsidian/
+/.codex-recovery/
+
+# Local books, papers, career research, and acquisition records
+/90-参考资料/
+
+# Generated files and local credentials
+__pycache__/
+*.py[cod]
+.env
+.env.*
+!.env.example
+Thumbs.db
+Desktop.ini
+.DS_Store
+*.tmp
+*.crdownload
+
+# Private teaching state: keep local, never publish
+/MISSION.md
+/NOTES.md
+/learning-records/
+/00-知识地图/学习路线/我的 RTC 学习进度.md
+/.agents/
+/skills-lock.json

@@ -1,0 +1,320 @@
+{
+  "nodes": [
+    {
+      "id": "root",
+      "type": "text",
+      "text": "# 02 信令与 SDP 协商\n\n[[00-知识地图/RTC 树状知识地图.canvas|返回 RTC 总树]] · [[00-知识地图/专题说明/02 信令与 SDP 协商|本专题学习说明]]\n\n上到下：专题 → 知识组 → 具体知识点。点击知识点进入说明；组卡链接已有详解。",
+      "x": 520,
+      "y": 0,
+      "width": 720,
+      "height": 190,
+      "color": "#2788D1"
+    },
+    {
+      "id": "g0",
+      "type": "text",
+      "text": "## 02.1 信令的作用\n\nP0\n\n配套详解：[[信令服务器]] · [[Offer Answer]]",
+      "x": 0,
+      "y": 300,
+      "width": 420,
+      "height": 250,
+      "color": "#2788D1"
+    },
+    {
+      "id": "p0-0",
+      "type": "text",
+      "text": "### [[00-知识地图/专题说明/02 信令与 SDP 协商#呼叫、房间与成员状态|呼叫、房间与成员状态]]\n\n建立谁和谁通信的业务关系，处理加入、离开、拒绝和超时。\n\n[[00-知识地图/专题说明/02 信令与 SDP 协商#02.1 信令的作用 · P0|学习说明与练习]]",
+      "x": 55,
+      "y": 670,
+      "width": 365,
+      "height": 300,
+      "color": "#2788D1"
+    },
+    {
+      "id": "p0-1",
+      "type": "text",
+      "text": "### [[00-知识地图/专题说明/02 信令与 SDP 协商#信令通道与媒体通道|信令通道与媒体通道]]\n\n信令可由应用用 WebSocket 等实现；通常不能把信令连接成功等同于媒体已经通。\n\n[[00-知识地图/专题说明/02 信令与 SDP 协商#02.1 信令的作用 · P0|学习说明与练习]]",
+      "x": 55,
+      "y": 1020,
+      "width": 365,
+      "height": 300,
+      "color": "#2788D1"
+    },
+    {
+      "id": "p0-2",
+      "type": "text",
+      "text": "### [[00-知识地图/专题说明/02 信令与 SDP 协商#Offer/Answer 模型|Offer/Answer 模型]]\n\n一方提出描述，另一方应答；理解创建与设置本地/远端描述的含义。\n\n[[00-知识地图/专题说明/02 信令与 SDP 协商#02.1 信令的作用 · P0|学习说明与练习]]",
+      "x": 55,
+      "y": 1370,
+      "width": 365,
+      "height": 300,
+      "color": "#2788D1"
+    },
+    {
+      "id": "g1",
+      "type": "text",
+      "text": "## 02.2 读懂 SDP\n\nP1\n\n配套详解：[[SDP]]",
+      "x": 470,
+      "y": 300,
+      "width": 420,
+      "height": 250,
+      "color": "#2788D1"
+    },
+    {
+      "id": "p1-0",
+      "type": "text",
+      "text": "### [[00-知识地图/专题说明/02 信令与 SDP 协商#媒体行、方向与标识|媒体行、方向与标识]]\n\n识别 m=、a=sendrecv/sendonly/recvonly/inactive、mid 等字段。\n\n[[00-知识地图/专题说明/02 信令与 SDP 协商#02.2 读懂 SDP · P1|学习说明与练习]]",
+      "x": 525,
+      "y": 670,
+      "width": 365,
+      "height": 300,
+      "color": "#2788D1"
+    },
+    {
+      "id": "p1-1",
+      "type": "text",
+      "text": "### [[00-知识地图/专题说明/02 信令与 SDP 协商#编解码能力与负载映射|编解码能力与负载映射]]\n\n读 rtpmap、fmtp、rtcp-fb；知道双方能力匹配、格式参数和 PT 映射的重要性。\n\n[[00-知识地图/专题说明/02 信令与 SDP 协商#02.2 读懂 SDP · P1|学习说明与练习]]",
+      "x": 525,
+      "y": 1020,
+      "width": 365,
+      "height": 300,
+      "color": "#2788D1"
+    },
+    {
+      "id": "p1-2",
+      "type": "text",
+      "text": "### [[00-知识地图/专题说明/02 信令与 SDP 协商#ICE 与安全参数|ICE 与安全参数]]\n\n识别候选信息、ICE 凭据、DTLS fingerprint/setup；SDP 是描述，不负责实际打洞。\n\n[[00-知识地图/专题说明/02 信令与 SDP 协商#02.2 读懂 SDP · P1|学习说明与练习]]",
+      "x": 525,
+      "y": 1370,
+      "width": 365,
+      "height": 300,
+      "color": "#2788D1"
+    },
+    {
+      "id": "g2",
+      "type": "text",
+      "text": "## 02.3 协商状态与更新\n\nP1\n\n配套详解：[[MediaStream Track 与 Transceiver]] · [[WebRTC 会话生命周期]]",
+      "x": 940,
+      "y": 300,
+      "width": 420,
+      "height": 250,
+      "color": "#2788D1"
+    },
+    {
+      "id": "p2-0",
+      "type": "text",
+      "text": "### [[00-知识地图/专题说明/02 信令与 SDP 协商#本地/远端描述与候选时序|本地/远端描述与候选时序]]\n\n处理描述和 ICE candidate 到达顺序，避免在状态不允许时调用接口。\n\n[[00-知识地图/专题说明/02 信令与 SDP 协商#02.3 协商状态与更新 · P1|学习说明与练习]]",
+      "x": 995,
+      "y": 670,
+      "width": 365,
+      "height": 300,
+      "color": "#2788D1"
+    },
+    {
+      "id": "p2-1",
+      "type": "text",
+      "text": "### [[00-知识地图/专题说明/02 信令与 SDP 协商#重新协商与冲突|重新协商与冲突]]\n\n理解加轨、减轨、方向变化和同时发起 offer 的冲突处理。\n\n[[00-知识地图/专题说明/02 信令与 SDP 协商#02.3 协商状态与更新 · P1|学习说明与练习]]",
+      "x": 995,
+      "y": 1020,
+      "width": 365,
+      "height": 300,
+      "color": "#2788D1"
+    },
+    {
+      "id": "p2-2",
+      "type": "text",
+      "text": "### [[00-知识地图/专题说明/02 信令与 SDP 协商#Track、Sender、Receiver、Transceiver|Track、Sender、Receiver、Transceiver]]\n\n分清媒体轨道、发送器、接收器和协商收发单元，不把它们都叫 stream。\n\n[[00-知识地图/专题说明/02 信令与 SDP 协商#02.3 协商状态与更新 · P1|学习说明与练习]]",
+      "x": 995,
+      "y": 1370,
+      "width": 365,
+      "height": 300,
+      "color": "#2788D1"
+    },
+    {
+      "id": "g3",
+      "type": "text",
+      "text": "## 02.4 业务可靠性与边界\n\nP2\n\n配套详解：[[SIP]] · [[信令服务器]]",
+      "x": 1410,
+      "y": 300,
+      "width": 420,
+      "height": 250,
+      "color": "#2788D1"
+    },
+    {
+      "id": "p3-0",
+      "type": "text",
+      "text": "### [[00-知识地图/专题说明/02 信令与 SDP 协商#鉴权、重连与幂等|鉴权、重连与幂等]]\n\n避免断线重发造成重复入会或重复创建会话，区分业务身份与传输身份。\n\n[[00-知识地图/专题说明/02 信令与 SDP 协商#02.4 业务可靠性与边界 · P2|学习说明与练习]]",
+      "x": 1465,
+      "y": 670,
+      "width": 365,
+      "height": 300,
+      "color": "#2788D1"
+    },
+    {
+      "id": "p3-1",
+      "type": "text",
+      "text": "### [[00-知识地图/专题说明/02 信令与 SDP 协商#错误码与状态日志|错误码与状态日志]]\n\n把协商失败、网络失败、编解码不兼容分开记录，保留可追踪的会话标识。\n\n[[00-知识地图/专题说明/02 信令与 SDP 协商#02.4 业务可靠性与边界 · P2|学习说明与练习]]",
+      "x": 1465,
+      "y": 1020,
+      "width": 365,
+      "height": 300,
+      "color": "#2788D1"
+    },
+    {
+      "id": "p3-2",
+      "type": "text",
+      "text": "### [[00-知识地图/专题说明/02 信令与 SDP 协商#SIP 与 WebRTC 通话互通|SIP 与 WebRTC 通话互通]]\n\n理解 SIP 会话与 WebRTC Offer/Answer 的映射，并核对 ICE、DTLS-SRTP、媒体方向、编码格式和 RTP 负载的兼容性。信令成功不代表网关两侧都能收发媒体。\n\n[[00-知识地图/专题说明/02 信令与 SDP 协商#02.4 业务可靠性与边界 · P2|学习说明与练习]]",
+      "x": 1465,
+      "y": 1370,
+      "width": 365,
+      "height": 300,
+      "color": "#2788D1"
+    }
+  ],
+  "edges": [
+    {
+      "id": "r-g0",
+      "fromNode": "root",
+      "fromSide": "bottom",
+      "toNode": "g0",
+      "toSide": "top",
+      "toEnd": "arrow",
+      "color": "#2788D1"
+    },
+    {
+      "id": "g0-p0",
+      "fromNode": "g0",
+      "fromSide": "left",
+      "toNode": "p0-0",
+      "toSide": "left",
+      "toEnd": "arrow",
+      "color": "#2788D1"
+    },
+    {
+      "id": "g0-p1",
+      "fromNode": "g0",
+      "fromSide": "left",
+      "toNode": "p0-1",
+      "toSide": "left",
+      "toEnd": "arrow",
+      "color": "#2788D1"
+    },
+    {
+      "id": "g0-p2",
+      "fromNode": "g0",
+      "fromSide": "left",
+      "toNode": "p0-2",
+      "toSide": "left",
+      "toEnd": "arrow",
+      "color": "#2788D1"
+    },
+    {
+      "id": "r-g1",
+      "fromNode": "root",
+      "fromSide": "bottom",
+      "toNode": "g1",
+      "toSide": "top",
+      "toEnd": "arrow",
+      "color": "#2788D1"
+    },
+    {
+      "id": "g1-p0",
+      "fromNode": "g1",
+      "fromSide": "left",
+      "toNode": "p1-0",
+      "toSide": "left",
+      "toEnd": "arrow",
+      "color": "#2788D1"
+    },
+    {
+      "id": "g1-p1",
+      "fromNode": "g1",
+      "fromSide": "left",
+      "toNode": "p1-1",
+      "toSide": "left",
+      "toEnd": "arrow",
+      "color": "#2788D1"
+    },
+    {
+      "id": "g1-p2",
+      "fromNode": "g1",
+      "fromSide": "left",
+      "toNode": "p1-2",
+      "toSide": "left",
+      "toEnd": "arrow",
+      "color": "#2788D1"
+    },
+    {
+      "id": "r-g2",
+      "fromNode": "root",
+      "fromSide": "bottom",
+      "toNode": "g2",
+      "toSide": "top",
+      "toEnd": "arrow",
+      "color": "#2788D1"
+    },
+    {
+      "id": "g2-p0",
+      "fromNode": "g2",
+      "fromSide": "left",
+      "toNode": "p2-0",
+      "toSide": "left",
+      "toEnd": "arrow",
+      "color": "#2788D1"
+    },
+    {
+      "id": "g2-p1",
+      "fromNode": "g2",
+      "fromSide": "left",
+      "toNode": "p2-1",
+      "toSide": "left",
+      "toEnd": "arrow",
+      "color": "#2788D1"
+    },
+    {
+      "id": "g2-p2",
+      "fromNode": "g2",
+      "fromSide": "left",
+      "toNode": "p2-2",
+      "toSide": "left",
+      "toEnd": "arrow",
+      "color": "#2788D1"
+    },
+    {
+      "id": "r-g3",
+      "fromNode": "root",
+      "fromSide": "bottom",
+      "toNode": "g3",
+      "toSide": "top",
+      "toEnd": "arrow",
+      "color": "#2788D1"
+    },
+    {
+      "id": "g3-p0",
+      "fromNode": "g3",
+      "fromSide": "left",
+      "toNode": "p3-0",
+      "toSide": "left",
+      "toEnd": "arrow",
+      "color": "#2788D1"
+    },
+    {
+      "id": "g3-p1",
+      "fromNode": "g3",
+      "fromSide": "left",
+      "toNode": "p3-1",
+      "toSide": "left",
+      "toEnd": "arrow",
+      "color": "#2788D1"
+    },
+    {
+      "id": "g3-p2",
+      "fromNode": "g3",
+      "fromSide": "left",
+      "toNode": "p3-2",
+      "toSide": "left",
+      "toEnd": "arrow",
+      "color": "#2788D1"
+    }
+  ]
+}

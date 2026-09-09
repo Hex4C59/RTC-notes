@@ -1,0 +1,320 @@
+{
+  "nodes": [
+    {
+      "id": "root",
+      "type": "text",
+      "text": "# 08 视频编码与 H.264\n\n[[00-知识地图/RTC 树状知识地图.canvas|返回 RTC 总树]] · [[00-知识地图/专题说明/08 视频编码与 H.264|本专题学习说明]]\n\n上到下：专题 → 知识组 → 具体知识点。点击知识点进入说明；组卡链接已有详解。",
+      "x": 520,
+      "y": 0,
+      "width": 720,
+      "height": 190,
+      "color": "#BA7618"
+    },
+    {
+      "id": "g0",
+      "type": "text",
+      "text": "## 08.1 压缩原理\n\nP0\n\n配套详解：[[视频编解码]] · [[帧内与帧间预测]] · [[变换量化与熵编码]]",
+      "x": 0,
+      "y": 300,
+      "width": 420,
+      "height": 250,
+      "color": "#BA7618"
+    },
+    {
+      "id": "p0-0",
+      "type": "text",
+      "text": "### [[00-知识地图/专题说明/08 视频编码与 H.264#帧内预测与帧间预测|帧内预测与帧间预测]]\n\n利用同一图像中的相关性或其他图像的参考信息，减少需要描述的数据。\n\n[[00-知识地图/专题说明/08 视频编码与 H.264#08.1 压缩原理 · P0|学习说明与练习]]",
+      "x": 55,
+      "y": 670,
+      "width": 365,
+      "height": 300,
+      "color": "#BA7618"
+    },
+    {
+      "id": "p0-1",
+      "type": "text",
+      "text": "### [[00-知识地图/专题说明/08 视频编码与 H.264#变换、量化与熵编码|变换、量化与熵编码]]\n\n理解残差、频域表示、精度取舍和无损统计压缩各自承担的工作。\n\n[[00-知识地图/专题说明/08 视频编码与 H.264#08.1 压缩原理 · P0|学习说明与练习]]",
+      "x": 55,
+      "y": 1020,
+      "width": 365,
+      "height": 300,
+      "color": "#BA7618"
+    },
+    {
+      "id": "p0-2",
+      "type": "text",
+      "text": "### [[00-知识地图/专题说明/08 视频编码与 H.264#码率、QP 与画质|码率、QP 与画质]]\n\n理解提高压缩程度怎样影响细节与码率，比较不同画面复杂度下的结果。\n\n[[00-知识地图/专题说明/08 视频编码与 H.264#08.1 压缩原理 · P0|学习说明与练习]]",
+      "x": 55,
+      "y": 1370,
+      "width": 365,
+      "height": 300,
+      "color": "#BA7618"
+    },
+    {
+      "id": "g1",
+      "type": "text",
+      "text": "## 08.2 码流结构\n\nP1\n\n配套详解：[[H264]] · [[GOP 与参考帧]] · [[H264 RTP 负载格式]]",
+      "x": 470,
+      "y": 300,
+      "width": 420,
+      "height": 250,
+      "color": "#BA7618"
+    },
+    {
+      "id": "p1-0",
+      "type": "text",
+      "text": "### [[00-知识地图/专题说明/08 视频编码与 H.264#I/P/B、参考帧与 GOP|I/P/B、参考帧与 GOP]]\n\n区分编码类型和参考关系；B 图像不必然要求未来显示图像，低时延要看实际依赖结构。\n\n[[00-知识地图/专题说明/08 视频编码与 H.264#08.2 码流结构 · P1|学习说明与练习]]",
+      "x": 525,
+      "y": 670,
+      "width": 365,
+      "height": 300,
+      "color": "#BA7618"
+    },
+    {
+      "id": "p1-1",
+      "type": "text",
+      "text": "### [[00-知识地图/专题说明/08 视频编码与 H.264#NALU、切片与访问单元|NALU、切片与访问单元]]\n\n一幅编码图像可包含多个 NALU；NALU 是码流组织单元，不等于一张完整画面。\n\n[[00-知识地图/专题说明/08 视频编码与 H.264#08.2 码流结构 · P1|学习说明与练习]]",
+      "x": 525,
+      "y": 1020,
+      "width": 365,
+      "height": 300,
+      "color": "#BA7618"
+    },
+    {
+      "id": "p1-2",
+      "type": "text",
+      "text": "### [[00-知识地图/专题说明/08 视频编码与 H.264#SPS/PPS、IDR 与解码起点|SPS/PPS、IDR 与解码起点]]\n\n理解参数集、随机接入与刷新参考关系，区分一般帧内图像和 IDR。\n\n[[00-知识地图/专题说明/08 视频编码与 H.264#08.2 码流结构 · P1|学习说明与练习]]",
+      "x": 525,
+      "y": 1370,
+      "width": 365,
+      "height": 300,
+      "color": "#BA7618"
+    },
+    {
+      "id": "g2",
+      "type": "text",
+      "text": "## 08.3 低延迟编码工程\n\nP1\n\n配套详解：[[H264]]",
+      "x": 940,
+      "y": 300,
+      "width": 420,
+      "height": 250,
+      "color": "#BA7618"
+    },
+    {
+      "id": "p2-0",
+      "type": "text",
+      "text": "### [[00-知识地图/专题说明/08 视频编码与 H.264#缓冲、前瞻与重排序|缓冲、前瞻与重排序]]\n\n分析编码器内部等待和显示重排；低延迟不是只把一个参数设为零。\n\n[[00-知识地图/专题说明/08 视频编码与 H.264#08.3 低延迟编码工程 · P1|学习说明与练习]]",
+      "x": 995,
+      "y": 670,
+      "width": 365,
+      "height": 300,
+      "color": "#BA7618"
+    },
+    {
+      "id": "p2-1",
+      "type": "text",
+      "text": "### [[00-知识地图/专题说明/08 视频编码与 H.264#关键帧与码率峰值|关键帧与码率峰值]]\n\n关键帧有助于恢复和入会，但体积可能较大；需要与发送节奏、带宽预算协调。\n\n[[00-知识地图/专题说明/08 视频编码与 H.264#08.3 低延迟编码工程 · P1|学习说明与练习]]",
+      "x": 995,
+      "y": 1020,
+      "width": 365,
+      "height": 300,
+      "color": "#BA7618"
+    },
+    {
+      "id": "p2-2",
+      "type": "text",
+      "text": "### [[00-知识地图/专题说明/08 视频编码与 H.264#软编、硬编与兼容性|软编、硬编与兼容性]]\n\n理解编码速度、设备能力和像素格式约束；具体支持随平台与版本核对。\n\n[[00-知识地图/专题说明/08 视频编码与 H.264#08.3 低延迟编码工程 · P1|学习说明与练习]]",
+      "x": 995,
+      "y": 1370,
+      "width": 365,
+      "height": 300,
+      "color": "#BA7618"
+    },
+    {
+      "id": "g3",
+      "type": "text",
+      "text": "## 08.4 扩展能力\n\nP2\n\n配套详解：[[HEVC]] · [[Simulcast]] · [[SVC]]",
+      "x": 1410,
+      "y": 300,
+      "width": 420,
+      "height": 250,
+      "color": "#BA7618"
+    },
+    {
+      "id": "p3-0",
+      "type": "text",
+      "text": "### [[00-知识地图/专题说明/08 视频编码与 H.264#Simulcast 多路编码|Simulcast 多路编码]]\n\n发送同一内容的不同质量版本，供服务端按订阅端能力选择。\n\n[[00-知识地图/专题说明/08 视频编码与 H.264#08.4 扩展能力 · P2|学习说明与练习]]",
+      "x": 1465,
+      "y": 670,
+      "width": 365,
+      "height": 300,
+      "color": "#BA7618"
+    },
+    {
+      "id": "p3-1",
+      "type": "text",
+      "text": "### [[00-知识地图/专题说明/08 视频编码与 H.264#SVC 可伸缩编码|SVC 可伸缩编码]]\n\n认识时间层、空间层和依赖关系；切换/丢弃层时不能破坏必要参考。\n\n[[00-知识地图/专题说明/08 视频编码与 H.264#08.4 扩展能力 · P2|学习说明与练习]]",
+      "x": 1465,
+      "y": 1020,
+      "width": 365,
+      "height": 300,
+      "color": "#BA7618"
+    },
+    {
+      "id": "p3-2",
+      "type": "text",
+      "text": "### [[00-知识地图/专题说明/08 视频编码与 H.264#其他编码与质量评估|其他编码与质量评估]]\n\n认识 VP8/VP9、AV1、H.265；学习 PSNR、SSIM 等，避免把客观指标当完整体验。\n\n[[00-知识地图/专题说明/08 视频编码与 H.264#08.4 扩展能力 · P2|学习说明与练习]]",
+      "x": 1465,
+      "y": 1370,
+      "width": 365,
+      "height": 300,
+      "color": "#BA7618"
+    }
+  ],
+  "edges": [
+    {
+      "id": "r-g0",
+      "fromNode": "root",
+      "fromSide": "bottom",
+      "toNode": "g0",
+      "toSide": "top",
+      "toEnd": "arrow",
+      "color": "#BA7618"
+    },
+    {
+      "id": "g0-p0",
+      "fromNode": "g0",
+      "fromSide": "left",
+      "toNode": "p0-0",
+      "toSide": "left",
+      "toEnd": "arrow",
+      "color": "#BA7618"
+    },
+    {
+      "id": "g0-p1",
+      "fromNode": "g0",
+      "fromSide": "left",
+      "toNode": "p0-1",
+      "toSide": "left",
+      "toEnd": "arrow",
+      "color": "#BA7618"
+    },
+    {
+      "id": "g0-p2",
+      "fromNode": "g0",
+      "fromSide": "left",
+      "toNode": "p0-2",
+      "toSide": "left",
+      "toEnd": "arrow",
+      "color": "#BA7618"
+    },
+    {
+      "id": "r-g1",
+      "fromNode": "root",
+      "fromSide": "bottom",
+      "toNode": "g1",
+      "toSide": "top",
+      "toEnd": "arrow",
+      "color": "#BA7618"
+    },
+    {
+      "id": "g1-p0",
+      "fromNode": "g1",
+      "fromSide": "left",
+      "toNode": "p1-0",
+      "toSide": "left",
+      "toEnd": "arrow",
+      "color": "#BA7618"
+    },
+    {
+      "id": "g1-p1",
+      "fromNode": "g1",
+      "fromSide": "left",
+      "toNode": "p1-1",
+      "toSide": "left",
+      "toEnd": "arrow",
+      "color": "#BA7618"
+    },
+    {
+      "id": "g1-p2",
+      "fromNode": "g1",
+      "fromSide": "left",
+      "toNode": "p1-2",
+      "toSide": "left",
+      "toEnd": "arrow",
+      "color": "#BA7618"
+    },
+    {
+      "id": "r-g2",
+      "fromNode": "root",
+      "fromSide": "bottom",
+      "toNode": "g2",
+      "toSide": "top",
+      "toEnd": "arrow",
+      "color": "#BA7618"
+    },
+    {
+      "id": "g2-p0",
+      "fromNode": "g2",
+      "fromSide": "left",
+      "toNode": "p2-0",
+      "toSide": "left",
+      "toEnd": "arrow",
+      "color": "#BA7618"
+    },
+    {
+      "id": "g2-p1",
+      "fromNode": "g2",
+      "fromSide": "left",
+      "toNode": "p2-1",
+      "toSide": "left",
+      "toEnd": "arrow",
+      "color": "#BA7618"
+    },
+    {
+      "id": "g2-p2",
+      "fromNode": "g2",
+      "fromSide": "left",
+      "toNode": "p2-2",
+      "toSide": "left",
+      "toEnd": "arrow",
+      "color": "#BA7618"
+    },
+    {
+      "id": "r-g3",
+      "fromNode": "root",
+      "fromSide": "bottom",
+      "toNode": "g3",
+      "toSide": "top",
+      "toEnd": "arrow",
+      "color": "#BA7618"
+    },
+    {
+      "id": "g3-p0",
+      "fromNode": "g3",
+      "fromSide": "left",
+      "toNode": "p3-0",
+      "toSide": "left",
+      "toEnd": "arrow",
+      "color": "#BA7618"
+    },
+    {
+      "id": "g3-p1",
+      "fromNode": "g3",
+      "fromSide": "left",
+      "toNode": "p3-1",
+      "toSide": "left",
+      "toEnd": "arrow",
+      "color": "#BA7618"
+    },
+    {
+      "id": "g3-p2",
+      "fromNode": "g3",
+      "fromSide": "left",
+      "toNode": "p3-2",
+      "toSide": "left",
+      "toEnd": "arrow",
+      "color": "#BA7618"
+    }
+  ]
+}

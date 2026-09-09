@@ -1,0 +1,320 @@
+{
+  "nodes": [
+    {
+      "id": "root",
+      "type": "text",
+      "text": "# 04 WebRTC 应用接入与源码阅读\n\n[[00-知识地图/RTC 树状知识地图.canvas|返回 RTC 总树]] · [[00-知识地图/专题说明/04 WebRTC 应用接入与源码阅读|本专题学习说明]]\n\n上到下：专题 → 知识组 → 具体知识点。点击知识点进入说明；组卡链接已有详解。",
+      "x": 520,
+      "y": 0,
+      "width": 720,
+      "height": 190,
+      "color": "#2788D1"
+    },
+    {
+      "id": "g0",
+      "type": "text",
+      "text": "## 04.1 浏览器最小通话\n\nP0\n\n配套详解：[[RTCDataChannel 与 SCTP]] · [[MediaStream Track 与 Transceiver]]",
+      "x": 0,
+      "y": 300,
+      "width": 420,
+      "height": 250,
+      "color": "#2788D1"
+    },
+    {
+      "id": "p0-0",
+      "type": "text",
+      "text": "### [[00-知识地图/专题说明/04 WebRTC 应用接入与源码阅读#采集、预览与权限|采集、预览与权限]]\n\n理解 getUserMedia、MediaStreamTrack、设备约束和失败处理。\n\n[[00-知识地图/专题说明/04 WebRTC 应用接入与源码阅读#04.1 浏览器最小通话 · P0|学习说明与练习]]",
+      "x": 55,
+      "y": 670,
+      "width": 365,
+      "height": 300,
+      "color": "#2788D1"
+    },
+    {
+      "id": "p0-1",
+      "type": "text",
+      "text": "### [[00-知识地图/专题说明/04 WebRTC 应用接入与源码阅读#RTCPeerConnection 操作|RTCPeerConnection 操作]]\n\n完成加轨、offer/answer、ICE 候选交换和远端播放，观察关键状态变化。\n\n[[00-知识地图/专题说明/04 WebRTC 应用接入与源码阅读#04.1 浏览器最小通话 · P0|学习说明与练习]]",
+      "x": 55,
+      "y": 1020,
+      "width": 365,
+      "height": 300,
+      "color": "#2788D1"
+    },
+    {
+      "id": "p0-2",
+      "type": "text",
+      "text": "### [[00-知识地图/专题说明/04 WebRTC 应用接入与源码阅读#RTCDataChannel|RTCDataChannel]]\n\n认识通用数据通道及可靠/部分可靠、有序/无序配置；它不等同于 RTP 媒体通路。\n\n[[00-知识地图/专题说明/04 WebRTC 应用接入与源码阅读#04.1 浏览器最小通话 · P0|学习说明与练习]]",
+      "x": 55,
+      "y": 1370,
+      "width": 365,
+      "height": 300,
+      "color": "#2788D1"
+    },
+    {
+      "id": "g1",
+      "type": "text",
+      "text": "## 04.2 Native 工程接入\n\nP1\n\n配套详解：[[Native WebRTC 线程模型]] · [[采集与渲染]]",
+      "x": 470,
+      "y": 300,
+      "width": 420,
+      "height": 250,
+      "color": "#2788D1"
+    },
+    {
+      "id": "p1-0",
+      "type": "text",
+      "text": "### [[00-知识地图/专题说明/04 WebRTC 应用接入与源码阅读#构建系统与版本固定|构建系统与版本固定]]\n\n学习 depot_tools、GN、Ninja；记录源码提交、依赖和编译参数，避免版本混搭。\n\n[[00-知识地图/专题说明/04 WebRTC 应用接入与源码阅读#04.2 Native 工程接入 · P1|学习说明与练习]]",
+      "x": 525,
+      "y": 670,
+      "width": 365,
+      "height": 300,
+      "color": "#2788D1"
+    },
+    {
+      "id": "p1-1",
+      "type": "text",
+      "text": "### [[00-知识地图/专题说明/04 WebRTC 应用接入与源码阅读#工厂、媒体源与回调|工厂、媒体源与回调]]\n\n理解 PeerConnection 创建、音视频源、观察者回调和应用侧生命周期。\n\n[[00-知识地图/专题说明/04 WebRTC 应用接入与源码阅读#04.2 Native 工程接入 · P1|学习说明与练习]]",
+      "x": 525,
+      "y": 1020,
+      "width": 365,
+      "height": 300,
+      "color": "#2788D1"
+    },
+    {
+      "id": "p1-2",
+      "type": "text",
+      "text": "### [[00-知识地图/专题说明/04 WebRTC 应用接入与源码阅读#平台设备与编码器接入|平台设备与编码器接入]]\n\n先接入默认实现，再按目标平台替换采集、播放或编解码器接口。\n\n[[00-知识地图/专题说明/04 WebRTC 应用接入与源码阅读#04.2 Native 工程接入 · P1|学习说明与练习]]",
+      "x": 525,
+      "y": 1370,
+      "width": 365,
+      "height": 300,
+      "color": "#2788D1"
+    },
+    {
+      "id": "g2",
+      "type": "text",
+      "text": "## 04.3 源码阅读主线\n\nP1\n\n配套详解：[[实时媒体链路]] · [[FFmpeg 解码状态机]]",
+      "x": 940,
+      "y": 300,
+      "width": 420,
+      "height": 250,
+      "color": "#2788D1"
+    },
+    {
+      "id": "p2-0",
+      "type": "text",
+      "text": "### [[00-知识地图/专题说明/04 WebRTC 应用接入与源码阅读#沿一帧声音或一个 RTP 包追踪|沿一帧声音或一个 RTP 包追踪]]\n\n从输入、线程切换、编码、打包、发送到接收播放，记录数据类型与所有者。\n\n[[00-知识地图/专题说明/04 WebRTC 应用接入与源码阅读#04.3 源码阅读主线 · P1|学习说明与练习]]",
+      "x": 995,
+      "y": 670,
+      "width": 365,
+      "height": 300,
+      "color": "#2788D1"
+    },
+    {
+      "id": "p2-1",
+      "type": "text",
+      "text": "### [[00-知识地图/专题说明/04 WebRTC 应用接入与源码阅读#按模块定位实现|按模块定位实现]]\n\n按问题找 RTP/RTCP、NetEq、APM、pacing、goog_cc；路径和类名以选定提交为准。\n\n[[00-知识地图/专题说明/04 WebRTC 应用接入与源码阅读#04.3 源码阅读主线 · P1|学习说明与练习]]",
+      "x": 995,
+      "y": 1020,
+      "width": 365,
+      "height": 300,
+      "color": "#2788D1"
+    },
+    {
+      "id": "p2-2",
+      "type": "text",
+      "text": "### [[00-知识地图/专题说明/04 WebRTC 应用接入与源码阅读#测试驱动阅读|测试驱动阅读]]\n\n先看接口和单元测试，再读实现；用最小输入验证分支，而非只凭函数名猜功能。\n\n[[00-知识地图/专题说明/04 WebRTC 应用接入与源码阅读#04.3 源码阅读主线 · P1|学习说明与练习]]",
+      "x": 995,
+      "y": 1370,
+      "width": 365,
+      "height": 300,
+      "color": "#2788D1"
+    },
+    {
+      "id": "g3",
+      "type": "text",
+      "text": "## 04.4 调试与功能扩展\n\nP2\n\n配套详解：[[WebRTC Stats]] · [[webrtc-internals]]",
+      "x": 1410,
+      "y": 300,
+      "width": 420,
+      "height": 250,
+      "color": "#2788D1"
+    },
+    {
+      "id": "p3-0",
+      "type": "text",
+      "text": "### [[00-知识地图/专题说明/04 WebRTC 应用接入与源码阅读#getStats 与内部诊断|getStats 与内部诊断]]\n\n关联 SSRC、轨道、候选对和传输统计；看增量和单位，而不是孤立截图。\n\n[[00-知识地图/专题说明/04 WebRTC 应用接入与源码阅读#04.4 调试与功能扩展 · P2|学习说明与练习]]",
+      "x": 1465,
+      "y": 670,
+      "width": 365,
+      "height": 300,
+      "color": "#2788D1"
+    },
+    {
+      "id": "p3-1",
+      "type": "text",
+      "text": "### [[00-知识地图/专题说明/04 WebRTC 应用接入与源码阅读#静音、换设备与屏幕共享|静音、换设备与屏幕共享]]\n\n区分停止采集、禁用轨道、替换源和重新协商带来的不同状态变化。\n\n[[00-知识地图/专题说明/04 WebRTC 应用接入与源码阅读#04.4 调试与功能扩展 · P2|学习说明与练习]]",
+      "x": 1465,
+      "y": 1020,
+      "width": 365,
+      "height": 300,
+      "color": "#2788D1"
+    },
+    {
+      "id": "p3-2",
+      "type": "text",
+      "text": "### [[00-知识地图/专题说明/04 WebRTC 应用接入与源码阅读#项目复现与最小改动|项目复现与最小改动]]\n\n一次改一个模块或参数，保留对照实验；不把大段未理解的生成代码当完成学习。\n\n[[00-知识地图/专题说明/04 WebRTC 应用接入与源码阅读#04.4 调试与功能扩展 · P2|学习说明与练习]]",
+      "x": 1465,
+      "y": 1370,
+      "width": 365,
+      "height": 300,
+      "color": "#2788D1"
+    }
+  ],
+  "edges": [
+    {
+      "id": "r-g0",
+      "fromNode": "root",
+      "fromSide": "bottom",
+      "toNode": "g0",
+      "toSide": "top",
+      "toEnd": "arrow",
+      "color": "#2788D1"
+    },
+    {
+      "id": "g0-p0",
+      "fromNode": "g0",
+      "fromSide": "left",
+      "toNode": "p0-0",
+      "toSide": "left",
+      "toEnd": "arrow",
+      "color": "#2788D1"
+    },
+    {
+      "id": "g0-p1",
+      "fromNode": "g0",
+      "fromSide": "left",
+      "toNode": "p0-1",
+      "toSide": "left",
+      "toEnd": "arrow",
+      "color": "#2788D1"
+    },
+    {
+      "id": "g0-p2",
+      "fromNode": "g0",
+      "fromSide": "left",
+      "toNode": "p0-2",
+      "toSide": "left",
+      "toEnd": "arrow",
+      "color": "#2788D1"
+    },
+    {
+      "id": "r-g1",
+      "fromNode": "root",
+      "fromSide": "bottom",
+      "toNode": "g1",
+      "toSide": "top",
+      "toEnd": "arrow",
+      "color": "#2788D1"
+    },
+    {
+      "id": "g1-p0",
+      "fromNode": "g1",
+      "fromSide": "left",
+      "toNode": "p1-0",
+      "toSide": "left",
+      "toEnd": "arrow",
+      "color": "#2788D1"
+    },
+    {
+      "id": "g1-p1",
+      "fromNode": "g1",
+      "fromSide": "left",
+      "toNode": "p1-1",
+      "toSide": "left",
+      "toEnd": "arrow",
+      "color": "#2788D1"
+    },
+    {
+      "id": "g1-p2",
+      "fromNode": "g1",
+      "fromSide": "left",
+      "toNode": "p1-2",
+      "toSide": "left",
+      "toEnd": "arrow",
+      "color": "#2788D1"
+    },
+    {
+      "id": "r-g2",
+      "fromNode": "root",
+      "fromSide": "bottom",
+      "toNode": "g2",
+      "toSide": "top",
+      "toEnd": "arrow",
+      "color": "#2788D1"
+    },
+    {
+      "id": "g2-p0",
+      "fromNode": "g2",
+      "fromSide": "left",
+      "toNode": "p2-0",
+      "toSide": "left",
+      "toEnd": "arrow",
+      "color": "#2788D1"
+    },
+    {
+      "id": "g2-p1",
+      "fromNode": "g2",
+      "fromSide": "left",
+      "toNode": "p2-1",
+      "toSide": "left",
+      "toEnd": "arrow",
+      "color": "#2788D1"
+    },
+    {
+      "id": "g2-p2",
+      "fromNode": "g2",
+      "fromSide": "left",
+      "toNode": "p2-2",
+      "toSide": "left",
+      "toEnd": "arrow",
+      "color": "#2788D1"
+    },
+    {
+      "id": "r-g3",
+      "fromNode": "root",
+      "fromSide": "bottom",
+      "toNode": "g3",
+      "toSide": "top",
+      "toEnd": "arrow",
+      "color": "#2788D1"
+    },
+    {
+      "id": "g3-p0",
+      "fromNode": "g3",
+      "fromSide": "left",
+      "toNode": "p3-0",
+      "toSide": "left",
+      "toEnd": "arrow",
+      "color": "#2788D1"
+    },
+    {
+      "id": "g3-p1",
+      "fromNode": "g3",
+      "fromSide": "left",
+      "toNode": "p3-1",
+      "toSide": "left",
+      "toEnd": "arrow",
+      "color": "#2788D1"
+    },
+    {
+      "id": "g3-p2",
+      "fromNode": "g3",
+      "fromSide": "left",
+      "toNode": "p3-2",
+      "toSide": "left",
+      "toEnd": "arrow",
+      "color": "#2788D1"
+    }
+  ]
+}
