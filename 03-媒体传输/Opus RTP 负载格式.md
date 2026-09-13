@@ -2,6 +2,7 @@
 aliases: [Opus over RTP, RFC 7587]
 tags: [rtc/concept, rtc/transport, rtc/audio, rtc/protocol]
 type: concept
+status: growing
 ---
 
 # Opus RTP 负载格式
@@ -10,6 +11,8 @@ type: concept
 > **前置：** [[PCM 与采样]]、[[Opus]]、[[RTP]]。
 > **初读：** 先读“一句话边界”和“RTP 与 SDP 字段”，理解 Opus packet、RTP 负载与时间戳的关系。
 > **深入：** packet 字段解析、收发状态机和伪代码在完成基础音频通路后阅读。
+
+## 一句话说明
 
 这篇笔记只讨论“已经编码好的 Opus packet 如何放进 RTP”，不重复讲 Opus 的 SILK/CELT 编码原理。规范依据主要是 RFC 7587（RTP Payload Format for Opus）和 RFC 6716（Opus 编码格式）；WebRTC 的常见参数和浏览器行为单独标注为实现约定。
 
@@ -164,6 +167,16 @@ onOpusRtp(rtp):
 - 模拟丢包，分别观察等待、in-band FEC、PLC 和过期包的统计；不要把 PLC 计成网络重传成功。
 
 常见症状：音频速度变快/变慢通常是 timestamp 增量或 packet duration 解析错误；周期性爆音常见于把聚合 packet 当单 frame；全部无声则先查 PT/SDP、SRTP 认证和 payload 是否误带 Annex-B/其他容器头。
+
+## 阅读导航
+
+- **上一篇：** [[H264 RTP 负载格式]]
+- **下一篇：** [[RTP 头扩展]]
+- **所属专题：** [[00-知识地图/专题说明/09 RTP 打包、解析与传输|09 RTP 打包、解析与传输]]
+- **回看：** [[RTC 知识总览]] · [[00-知识地图/学习路线/学习进度模板|学习进度]] · [[00-知识地图/学习路线/RTC 工程师学习路线.canvas|阶段路线]]
+
+
+> 读完先回所属专题做练习/验收，再点下一篇。内部链接最多再追一层；不影响理解的陌生词先记下。
 
 ## 图谱关系
 

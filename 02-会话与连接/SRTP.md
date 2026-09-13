@@ -2,11 +2,17 @@
 aliases: [Secure Real-time Transport Protocol, 安全实时传输协议]
 tags: [rtc/concept, rtc/security, rtc/transport]
 type: concept
+status: growing
 ---
 
 # SRTP
 
-## 定义
+> [!tip] 阅读提示
+> **前置：** 无强前置；可先从本篇一句话说明读起。
+> **初读：** 先读「一句话说明」和「核心机制」，弄清 SRTP 解决什么问题、不负责什么。
+> **深入：** 「工程要点」、「工作流程或状态流」、「工程实现与取舍」 在实现、联调或排障时再读。
+
+## 一句话说明
 
 SRTP 在 RTP 之上提供媒体负载加密、消息认证和重放保护；SRTCP 为 RTCP 控制报文提供对应保护。它保护的是媒体传输报文，不负责 SDP 协商、ICE 打洞或业务层端到端密钥管理。
 
@@ -34,6 +40,22 @@ SRTP 在 RTP 之上提供媒体负载加密、消息认证和重放保护；SRTC
 2. 发送端根据 SSRC、sequence number、ROC 和加密上下文保护 RTP/RTCP，附加认证标签后发出。
 3. 接收端按包序扩展和重放窗口验证认证标签，拒绝重复/过旧/篡改报文，再交给解码或 RTCP 处理。
 4. 发生 SSRC 变化、重新协商、关闭或传输切换时更新或清理对应安全上下文。
+
+```mermaid
+flowchart LR
+    D["DTLS-SRTP<br/>协商 profile 并导出密钥材料"] --> S["发送端 crypto context<br/>SSRC + sequence + ROC + key epoch"]
+    R["RTP 包<br/>头部 + 音视频负载"] --> P["SRTP protect"]
+    S --> P
+    P --> W["线路上的 SRTP 包<br/>RTP 头部通常可见<br/>负载密文 + profile 认证信息"]
+    W --> V["接收端按 SSRC 找上下文<br/>推断 packet index"]
+    V --> A{"认证、解密与<br/>重放检查通过？"}
+    A -- "否" --> X["丢弃并分类计数<br/>不推进接收状态"]
+    A -- "是" --> U["提交 ROC / replay window"]
+    U --> M["交给 RTP 重排、恢复与解码"]
+```
+
+> [!note] 图的边界
+> “RTP 头部通常可见”不是“整个头部永远明文”的承诺：头扩展是否加密、认证标签的形式与长度都取决于协商的 SRTP profile 和扩展规范。SRTP 通过后也只说明安全检查成功，不代表报文一定赶得上播放截止时间。
 
 ## 关键对象、字段与报文
 
@@ -88,6 +110,16 @@ RTP packet index 是 ROC 与 16 位 sequence number 的拼接，用于派生包�
 先确认 ICE selected pair 和 DTLS fingerprint/状态，再确认 use_srtp profile 与 exporter 输出长度，之后检查每个 SSRC 的序列/ROC/replay 状态，最后再看解码和播放。ICE restart 不必然产生新的 DTLS-SRTP key epoch；若 DTLS transport 复用，旧 SRTP 上下文可能继续有效，若重新握手则必须原子切换到新 crypto context，不能混用新旧 key。
 
 建议把失败分为 profile/协商失败、exporter/上下文初始化失败、认证失败、重放/过窗丢弃、未知 SSRC、SRTCP index/E bit 解析失败和媒体解码失败。这样能避免把所有“收到但无画面”都归因于网络。
+
+## 阅读导航
+
+- **上一篇：** [[DTLS]]
+- **下一篇：** [[SRTP 与 SRTCP 报文保护]]
+- **所属专题：** [[00-知识地图/专题说明/03 ICE、STUN、TURN 与传输安全|03 ICE、STUN、TURN 与传输安全]]
+- **回看：** [[RTC 知识总览]] · [[00-知识地图/学习路线/学习进度模板|学习进度]] · [[00-知识地图/学习路线/RTC 工程师学习路线.canvas|阶段路线]]
+
+
+> 读完先回所属专题做练习/验收，再点下一篇。内部链接最多再追一层；不影响理解的陌生词先记下。
 
 ## 图谱关系
 

@@ -2,6 +2,7 @@
 aliases: [SRTP/SRTCP Packet Protection, SRTP 报文保护, SRTCP 报文保护]
 tags: [rtc/concept, rtc/security, rtc/transport, rtc/deep-dive]
 type: concept
+status: growing
 ---
 
 # SRTP 与 SRTCP 报文保护
@@ -11,7 +12,7 @@ type: concept
 > **初读：** 先读“定义”“解决的问题”“工作流程或状态流”，分清媒体保护、密钥协商与重放防护的职责。
 > **深入：** 算法套件、exporter、ROC、nonce 和重放窗口留到实现或排障时逐项阅读；第一轮可先读 [[SRTP]]。
 
-## 定义
+## 一句话说明
 
 SRTP 为 RTP 媒体负载提供机密性、完整性和抗重放保护；SRTCP 对 RTCP 控制报文提供对应保护。二者共享 DTLS-SRTP 协商出的密钥层次，但使用不同的包索引和报文结构。本文只描述协议对象、状态和调用边界，不实现密码学算法。
 
@@ -112,6 +113,23 @@ SRTP 不为每个包随机生成并传输一个完整 nonce，而是用 session 
 关键不变量是：同一 key epoch 下，不能让同一 SSRC 和 packet index 重复使用会导致 nonce 重用的组合；重启、重协商和 key epoch 切换必须明确状态边界。
 
 ## RTP 保护与验证原理
+
+```mermaid
+flowchart TD
+    A["收到 SRTP 包"] --> B["解析 RTP 头并按 SSRC 找 crypto context"]
+    B --> C["根据 sequence 与当前 ROC<br/>推断 candidate packet index"]
+    C --> D{"明显超出可接受窗口？"}
+    D -- "是" --> X["丢弃并计数<br/>不修改 ROC 或 replay window"]
+    D -- "否" --> E{"使用候选 index<br/>完成认证与解密？"}
+    E -- "失败" --> X
+    E -- "成功" --> F{"replay window 已记录？"}
+    F -- "重复" --> X
+    F -- "未记录" --> G["原子提交最高 index、ROC<br/>并在 replay window 置位"]
+    G --> H["交给 RTP 重排、恢复与解码"]
+```
+
+> [!important] 安全状态的提交点
+> `candidate index` 只是依据当前历史作出的暂定判断。只有认证成功且不是重放的包，才能推进 ROC、最高 packet index 和 replay window；否则攻击者可以用伪造包污染状态，让后续合法媒体持续被拒绝。图省略了具体 profile 的 nonce、AAD 和 tag 布局，这些必须交给经过验证的 SRTP 库。
 
 ### 发送
 
@@ -250,6 +268,16 @@ receive_srtcp(raw, rtcp_state, crypto_context):
 ## 示例场景
 
 一个视频 SSRC 在序列号 65534 后发送 65535、0、1。发送端在 0 处将 ROC 加一；接收端通过半序列空间推断相同的 packet index，认证成功后推进 replay window。若攻击者重放 65535，候选 index 已在窗口内置位，报文被丢弃且不会再次交给解码器。
+
+## 阅读导航
+
+- **上一篇：** [[SRTP]]
+- **下一篇：** [[ICE 与 TURN 诊断]]
+- **所属专题：** [[00-知识地图/专题说明/03 ICE、STUN、TURN 与传输安全|03 ICE、STUN、TURN 与传输安全]]
+- **回看：** [[RTC 知识总览]] · [[00-知识地图/学习路线/学习进度模板|学习进度]] · [[00-知识地图/学习路线/RTC 工程师学习路线.canvas|阶段路线]]
+
+
+> 读完先回所属专题做练习/验收，再点下一篇。内部链接最多再追一层；不影响理解的陌生词先记下。
 
 ## 图谱关系
 

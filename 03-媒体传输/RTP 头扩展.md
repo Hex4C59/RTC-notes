@@ -2,6 +2,7 @@
 aliases: [RTP Header Extensions, RFC 8285, MID, RID]
 tags: [rtc/concept, rtc/transport, rtc/protocol, rtc/feedback]
 type: concept
+status: growing
 ---
 
 # RTP 头扩展
@@ -10,6 +11,8 @@ type: concept
 > **前置：** [[RTP]]、[[SDP]]。
 > **初读：** 先读“外层结构”和“SDP 协商与常见扩展”，理解扩展 ID 如何通过协商关联语义。
 > **深入：** 字段解析、具体字段检查及收发状态机留到抓包或实现解析器时阅读。
+
+## 一句话说明
 
 RTP 固定头只能表达 PT、序号、时间戳和 SSRC。WebRTC 通过 RTP header extension 增加媒体线、编码层、音量、方向和传输观测信息。扩展不是 RTP payload，也不是 SDP 的替代品；它的存在、ID 和格式要由 SDP `a=extmap` 协商或由明确的会话配置允许。
 
@@ -171,6 +174,16 @@ parseExtensions(rtp):
 - SFU 改写 SSRC/MID/RID 后，检查下游 RTP、RTCP 反馈和统计映射仍一致。
 
 常见症状：BUNDLE 包被路由到错误 m-line，先查 MID ID 是否按当前 SDP；带宽估计异常，查 TWCC ID/长度/反馈映射和 sequence 回绕；视频方向错误，查 orientation 是否被渲染器忽略或重复旋转；“包能解码但统计全为零”，常见于扩展未协商、ID 表过期或把 RTP sequence 当 TWCC。
+
+## 阅读导航
+
+- **上一篇：** [[Opus RTP 负载格式]]
+- **下一篇：** [[视频 RTP 接收与组帧状态机]]
+- **所属专题：** [[00-知识地图/专题说明/09 RTP 打包、解析与传输|09 RTP 打包、解析与传输]]
+- **回看：** [[RTC 知识总览]] · [[00-知识地图/学习路线/学习进度模板|学习进度]] · [[00-知识地图/学习路线/RTC 工程师学习路线.canvas|阶段路线]]
+
+
+> 读完先回所属专题做练习/验收，再点下一篇。内部链接最多再追一层；不影响理解的陌生词先记下。
 
 ## 图谱关系
 

@@ -2,11 +2,17 @@
 aliases: [ICE Connectivity Checks, ICE Candidate Selection]
 tags: [rtc/concept, rtc/connectivity]
 type: concept
+status: growing
 ---
 
 # ICE 连通性检查与选路
 
-## 定义
+> [!tip] 阅读提示
+> **前置：** 无强前置；可先从本篇一句话说明读起。
+> **初读：** 先读「一句话说明」和「核心机制」，弄清 ICE 连通性检查与选路 解决什么问题、不负责什么。
+> **深入：** 「工程要点」、「工作流程或状态流」、「工程实现与取舍」 在实现、联调或排障时再读。
+
+## 一句话说明
 
 ICE 连通性检查是 ICE Agent 使用 STUN 请求验证候选对双向可达性的过程；选路则在通过检查的候选对中，根据角色、优先级和策略提名一条实际使用的路径。候选收集成功不等于路径已连通。
 
@@ -16,6 +22,22 @@ ICE 连通性检查是 ICE Agent 使用 STUN 请求验证候选对双向可达�
 2. Agent 通过 tie-breaker 确定 controlling/controlled 角色。施控方可在成功检查后提名候选对；受控方接受有效提名。角色冲突必须重新选定，而不是无限重试。
 3. Trickle ICE 允许候选边收集边检查；检查状态可能经历 Frozen、Waiting、In-Progress、Succeeded 或 Failed，最终由选中的 pair 驱动 ICE connected/completed。
 4. 连接建立后仍需持续 consent freshness。选中 pair 失效、对端不再响应或网络切换时，ICE 可能降为 disconnected/failed，并由上层决定重试或 ICE restart。
+
+```mermaid
+flowchart LR
+    F["Frozen"] --> W["Waiting"]
+    W --> I["In-Progress<br/>发送 STUN Binding 检查"]
+    I -->|超时或校验失败| X["Failed"]
+    I -->|请求与响应有效| S["Succeeded"]
+    S --> Q{"controlling 端<br/>是否提名？"}
+    Q -->|尚未提名| W
+    Q -->|提名成功| P["selected pair"]
+    P --> C["consent freshness"]
+    C -->|持续成功| P
+    C -->|持续失联| D["disconnected / failed<br/>等待恢复或 ICE restart"]
+```
+
+`Succeeded` 只说明某个候选对检查成功，`selected pair` 才表示传输实际选用了它。真实 checklist 还会处理触发检查、foundation 解冻、角色冲突和多组件收敛，图中没有把这些内部队列简化成“只检查一对”。
 
 ## 工程要点
 
@@ -71,6 +93,16 @@ ICE 连通性检查是 ICE Agent 使用 STUN 请求验证候选对双向可达�
 ## 示例场景
 
 双方都有 host 和 relay 候选。host pair 的 Binding Request 能发出但响应被过滤，pair 进入 Failed；relay pair 的检查成功并被 controlling 端提名，ICE connected 后 DTLS 和 SRTP 才在 relay 路径上建立。
+
+## 阅读导航
+
+- **上一篇：** [[ICE 候选与候选对]]
+- **下一篇：** [[ICE Restart]]
+- **所属专题：** [[00-知识地图/专题说明/03 ICE、STUN、TURN 与传输安全|03 ICE、STUN、TURN 与传输安全]]
+- **回看：** [[RTC 知识总览]] · [[00-知识地图/学习路线/学习进度模板|学习进度]] · [[00-知识地图/学习路线/RTC 工程师学习路线.canvas|阶段路线]]
+
+
+> 读完先回所属专题做练习/验收，再点下一篇。内部链接最多再追一层；不影响理解的陌生词先记下。
 
 ## 图谱关系
 

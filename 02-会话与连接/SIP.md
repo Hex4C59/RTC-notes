@@ -2,11 +2,17 @@
 aliases: [Session Initiation Protocol, 会话初始协议]
 tags: [rtc/concept, rtc/signaling]
 type: concept
+status: growing
 ---
 
 # SIP
 
-## 定义
+> [!tip] 阅读提示
+> **前置：** 无强前置；可先从本篇一句话说明读起。
+> **初读：** 先读「一句话说明」和「核心机制」，弄清 SIP 解决什么问题、不负责什么。
+> **深入：** 「工程要点」、「工作流程或状态流」、「工程实现与取舍」 在实现、联调或排障时再读。
+
+## 一句话说明
 
 SIP 是用于创建、修改和终止多媒体会话的应用层信令协议，广泛用于 VoIP、运营商和会议系统。它可以携带 SDP，但不等于 RTP 媒体传输，也不是 WebRTC 应用必须采用的信令协议。
 
@@ -16,6 +22,27 @@ SIP 是用于创建、修改和终止多媒体会话的应用层信令协议，�
 - SIP 消息中的 SDP 可描述媒体能力、方向、地址、编解码和安全参数；双方的 Offer/Answer 逻辑仍遵循相应协商规则。
 - SIP 信令路径、ICE/STUN/TURN 路径和 RTP/SRTP 媒体路径可以由不同服务器或网络承载，信令成功不能证明媒体可达。
 - WebRTC 与 SIP 互通通常需要网关转换浏览器 API、SDP 语义、ICE/DTLS-SRTP 与传统 RTP/SDES 或媒体服务器能力。
+
+```mermaid
+sequenceDiagram
+    participant A as 主叫 UA
+    participant P as SIP 代理/网关
+    participant B as 被叫 UA
+    A->>P: INVITE + SDP Offer
+    P->>B: INVITE + SDP Offer
+    B-->>P: 180 Ringing
+    P-->>A: 180 Ringing
+    B-->>P: 200 OK + SDP Answer
+    P-->>A: 200 OK + SDP Answer
+    A->>P: ACK
+    P->>B: ACK
+    Note over A,B: RTP/SRTP 媒体可能走与 SIP 信令完全不同的路径
+    A->>P: BYE
+    P->>B: BYE
+    B-->>A: 200 OK（经代理转交）
+```
+
+这里只画出成功呼叫的主干。实际 SIP 还包含事务重传、鉴权、CANCEL、错误响应、Record-Route 和重新协商；WebRTC 网关也可能终止两侧媒体安全并重新建立另一侧传输。
 
 ## 工程要点
 
@@ -71,6 +98,15 @@ SIP 的事务层负责请求/响应重传和超时，对话层负责已建立会
 ## 示例场景
 
 浏览器通过网关呼叫 SIP 电话。INVITE/200 OK 成功后，网关将浏览器的 ICE/DTLS-SRTP 能力转换成电话侧可用的 RTP/SRTP；若只看到 ACK 而无 RTP，应检查网关 SDP 映射与媒体地址，而不是重试 INVITE。
+
+## 阅读导航
+
+- **上一篇：** [[信令与 PeerConnection 状态机]]
+- **下一篇：** [[WHIP 与 WHEP]]
+- **所属专题：** [[00-知识地图/专题说明/02 信令与 SDP 协商|02 信令与 SDP 协商]]
+- **回看：** [[RTC 知识总览]] · [[00-知识地图/学习路线/学习进度模板|学习进度]] · [[00-知识地图/学习路线/RTC 工程师学习路线.canvas|阶段路线]]
+
+> 读完先回所属专题做练习/验收，再点下一篇。内部链接最多再追一层；不影响理解的陌生词先记下。
 
 ## 图谱关系
 

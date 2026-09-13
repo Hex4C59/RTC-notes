@@ -2,11 +2,17 @@
 aliases: [Traversal Using Relays around NAT, NAT 中继穿越]
 tags: [rtc/concept, rtc/connectivity, rtc/server]
 type: concept
+status: growing
 ---
 
 # TURN
 
-## 定义
+> [!tip] 阅读提示
+> **前置：** 无强前置；可先从本篇一句话说明读起。
+> **初读：** 先读「一句话说明」和「核心机制」，弄清 TURN 解决什么问题、不负责什么。
+> **深入：** 「工程要点」、「工作流程或状态流」、「工程实现与取舍」 在实现、联调或排障时再读。
+
+## 一句话说明
 
 TURN（Traversal Using Relays around NAT）在端到端直连不可用或不稳定时，为客户端分配公网中继地址并转发数据。它提高受限网络下的连接成功率，但会增加服务器带宽、成本和通常的路径延迟；TURN 不是 SFU 或媒体业务服务器。
 
@@ -14,7 +20,7 @@ TURN（Traversal Using Relays around NAT）在端到端直连不可用或不稳�
 
 - 客户端向 TURN Server 发起 Allocate，完成认证后获得 relay transport address；随后通过 CreatePermission 和可选的 ChannelBind 许可对端流量。
 - 客户端把 relay candidate 交给 ICE。双方仍需交换并检查候选对，选中 relay pair 后媒体和数据才会沿中继传输。
-- TURN 可承载 UDP，也可在 UDP 受限时使用 TCP 或 TLS 连接；端口、防火墙和 TLS 证书配置会影响回退路径。
+- TURN 可承载 UDP，也可在 UDP 受限时使用 TCP 或 [[TLS]] 连接；端口、防火墙和 TLS 证书配置会影响回退路径。
 - Allocation、permission、channel 和 credential 都有生命周期。Refresh、临时凭据和资源配额是长期运行服务的必要控制。
 
 ## 工程要点
@@ -35,6 +41,27 @@ TURN（Traversal Using Relays around NAT）在端到端直连不可用或不稳�
 3. 对端地址通过 CreatePermission 许可；高频媒体可用 ChannelBind/ChannelData 减少开销。
 4. 双方把 relay candidate 交给 ICE 检查，selected relay pair 建立后媒体和数据经 allocation 转发。
 5. 客户端周期 Refresh 延长 allocation 和权限；挂断、超时或异常时服务端回收资源。
+
+```mermaid
+flowchart TD
+    A["Allocate 请求"] --> B{"认证通过？"}
+    B -- "否" --> C["返回挑战或错误<br/>不创建中继资源"]
+    B -- "是" --> D["创建 allocation<br/>返回 relay address 与 lifetime"]
+    D --> E["把 relay candidate 交给 ICE"]
+    D --> F["CreatePermission<br/>允许指定 peer 地址"]
+    F --> G{"需要降低高频数据封装开销？"}
+    G -- "是" --> H["ChannelBind<br/>建立 channel number 映射"]
+    G -- "否" --> I["使用 Send/Data indication"]
+    H --> J["ICE 选中 relay pair 后<br/>经 TURN 转发媒体或数据"]
+    I --> J
+    J --> K{"仍需继续会话？"}
+    K -- "是" --> L["按各自期限 Refresh<br/>allocation / permission / channel"]
+    L --> J
+    K -- "否、超时或异常" --> M["释放 allocation 与带宽资源"]
+```
+
+> [!note] 图的边界
+> Allocation、permission 和 channel 是相关但不同的状态与寿命；图把它们画在一条主线上便于初读，并不表示三者必须同时创建或使用相同刷新周期。实际定时和报文字段应以所用 TURN 规范及实现版本为准。
 
 ## 关键对象、字段与报文
 
@@ -71,6 +98,16 @@ TURN 不让对端直接访问内网地址，而是让双方主动与中继建立
 ## 示例场景
 
 企业网络禁止对外 UDP，但允许 TLS 到 443。客户端先生成 relay UDP 候选失败，随后使用 TURN/TLS allocation；ICE 选中 TLS relay 后 DTLS 和 SRTP 建立，但端到端延迟上升，系统保持音频并降低视频层级。
+
+## 阅读导航
+
+- **上一篇：** [[STUN]]
+- **下一篇：** [[ICE]]
+- **所属专题：** [[00-知识地图/专题说明/03 ICE、STUN、TURN 与传输安全|03 ICE、STUN、TURN 与传输安全]]
+- **回看：** [[RTC 知识总览]] · [[00-知识地图/学习路线/学习进度模板|学习进度]] · [[00-知识地图/学习路线/RTC 工程师学习路线.canvas|阶段路线]]
+
+
+> 读完先回所属专题做练习/验收，再点下一篇。内部链接最多再追一层；不影响理解的陌生词先记下。
 
 ## 图谱关系
 

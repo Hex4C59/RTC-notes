@@ -2,11 +2,17 @@
 aliases: [Offer/Answer, 提议应答模型]
 tags: [rtc/concept, rtc/signaling]
 type: concept
+status: growing
 ---
 
 # Offer Answer
 
-## 定义
+> [!tip] 阅读提示
+> **前置：** 无强前置；可先从本篇一句话说明读起。
+> **初读：** 先读「一句话说明」和「核心机制」，弄清 Offer Answer 解决什么问题、不负责什么。
+> **深入：** 「工程要点」、「工作流程或状态流」、「工程实现与取舍」 在实现、联调或排障时再读。
+
+## 一句话说明
 
 Offer/Answer 是一种协商模型：一方提出会话能力和当前意图，另一方返回自己接受的兼容子集。它通过 SDP 落地媒体类型、方向、编解码、传输和安全参数，是“双方愿意怎样通信”的控制层，不等同于媒体已连通。
 
@@ -17,12 +23,40 @@ Offer/Answer 是一种协商模型：一方提出会话能力和当前意图，�
 - 增加或移除 Track、改变 Transceiver 方向、编码能力或 ICE 凭据可能触发重新协商。`mid` 和 `m=` 段的生命周期必须在双方状态机中保持一致。
 - 同时出现两个 Offer 会产生 glare。应用应采用完美协商、角色约束或回滚策略，不能靠随机延迟掩盖状态竞争。
 
+```mermaid
+sequenceDiagram
+    participant A as 发起方 A
+    participant S as 业务信令通道
+    participant B as 应答方 B
+    A->>A: createOffer + setLocalDescription
+    A->>S: Offer（会话 ID、版本、SDP）
+    S->>B: 转交 Offer
+    B->>B: setRemoteDescription
+    B->>B: createAnswer + setLocalDescription
+    B->>S: Answer（对应版本）
+    S->>A: 转交 Answer
+    A->>A: setRemoteDescription
+    Note over A,B: Trickle ICE 候选可在描述之后增量交换；媒体仍需 ICE/DTLS 成功
+```
+
+信令服务器负责传递双方描述，不替浏览器“接受”媒体参数。重新协商会再次走类似流程，并必须用 signaling state、版本和角色处理并发 Offer。
+
 ## 工程要点
 
 - 严格区分 `signalingState`、本地/远端描述和 ICE candidate 到达状态；候选在远端描述可用前到达时应暂存并按会话代次回放。
 - 信令消息带会话 ID、协商版本和幂等键，重连后不要把旧 Offer/Answer 或旧候选投递给新连接。
 - 重新协商应有原因、超时和失败回滚；仅修改发送源时优先考虑 `replaceTrack` 是否足够，避免不必要的协商。
 - 诊断时保存 Offer/Answer 的摘要和关键字段，不要把 SDP 全文无保护写入业务日志。
+
+## 阅读导航
+
+- **上一篇：** [[WebSocket]]
+- **下一篇：** [[SDP]]
+- **所属专题：** [[00-知识地图/专题说明/02 信令与 SDP 协商|02 信令与 SDP 协商]]
+- **回看：** [[RTC 知识总览]] · [[00-知识地图/学习路线/学习进度模板|学习进度]] · [[00-知识地图/学习路线/RTC 工程师学习路线.canvas|阶段路线]]
+
+
+> 读完先回所属专题做练习/验收，再点下一篇。内部链接最多再追一层；不影响理解的陌生词先记下。
 
 ## 图谱关系
 

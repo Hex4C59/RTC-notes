@@ -6,6 +6,19 @@ status: growing
 
 # FFmpeg 与媒体处理地图
 
+## 关系速览
+
+```mermaid
+flowchart LR
+    Input["文件、网络流或内存输入"] --> Demux["解复用"]
+    Demux --> Packet["AVPacket<br/>压缩数据与时间戳"]
+    Packet --> Decoder["send_packet / receive_frame"]
+    Decoder --> Frame["AVFrame<br/>原始音视频帧"]
+    Frame --> Filter["FilterGraph<br/>重采样、缩放、混合"]
+    Filter --> Queue["有界队列与主时钟"]
+    Queue --> Output["渲染、编码或复用输出"]
+```
+
 ## 从文件到帧
 
 - [[码流与容器]]：区分编码格式、裸码流、容器和网络流。

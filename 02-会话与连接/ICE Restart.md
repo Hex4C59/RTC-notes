@@ -2,11 +2,17 @@
 aliases: [ICE Restart, ICE 重启]
 tags: [rtc/concept, rtc/connectivity, rtc/signaling]
 type: concept
+status: growing
 ---
 
 # ICE Restart
 
-## 定义
+> [!tip] 阅读提示
+> **前置：** 无强前置；可先从本篇一句话说明读起。
+> **初读：** 先读「一句话说明」和「核心机制」，弄清 ICE Restart 解决什么问题、不负责什么。
+> **深入：** 「工程要点」、「工作流程或状态流」、「工程实现与取舍」 在实现、联调或排障时再读。
+
+## 一句话说明
 
 ICE Restart 是在同一 PeerConnection 会话中建立新的 ICE generation：通过新的 `ice-ufrag` 和 `ice-pwd` 触发重新收集、交换和检查候选，以恢复因网络接口、NAT 映射或路径状态变化而失效的连接。它不是简单重发旧候选，也不是业务层重新创建整个呼叫。
 
@@ -16,6 +22,17 @@ ICE Restart 是在同一 PeerConnection 会话中建立新的 ICE generation：�
 - 新 Offer/Answer 仍需经过信令服务器交换。旧 generation 的候选和检查结果不能替代新代次；Trickle ICE 消息必须带上足以区分代次的上下文。
 - ICE Agent 重新收集候选并完成角色、检查和提名。路径恢复后媒体和数据可以继续使用；若 DTLS 指纹和角色不变，ICE restart 通常不等同于重新做一次完整 DTLS 身份协商。
 - 如果重启仍失败，应区分网络不可达、信令未送达、凭据/候选错配、DTLS 或媒体层失败，再决定结束会话。
+
+```mermaid
+flowchart LR
+    O["旧 generation<br/>旧 ufrag/pwd 与 selected pair"] --> T["网络变化、consent 失败<br/>或受控的重启请求"]
+    T --> N["生成新 ufrag/pwd<br/>形成新 generation"]
+    N --> S["Offer/Answer 与 Trickle ICE<br/>交换新代候选"]
+    S --> C["重新检查、提名<br/>得到新 selected pair"]
+    C --> R["验证 DTLS、RTP/RTCP、<br/>DataChannel 与实际播放恢复"]
+    O -. "延迟到达的旧候选<br/>必须隔离或丢弃" .-> S
+    R -->|仍失败且达到策略上限| F["报告不可恢复<br/>关闭或重新入会"]
+```
 
 ## 工程要点
 
@@ -71,6 +88,15 @@ ICE restart 的协议信号是新的 ICE 凭据，而不是重复发送相同 ca
 ## 示例场景
 
 移动端从家庭 Wi-Fi 切到蜂窝网络后，ICE state 进入 disconnected。客户端等待短暂退避仍未恢复，调用 restartIce 并发送新 Offer；新 selected pair 为 relay，音频先恢复，视频在带宽估计稳定后逐步恢复分层。
+
+## 阅读导航
+
+- **上一篇：** [[ICE 连通性检查与选路]]
+- **下一篇：** [[ICE 状态机]]
+- **所属专题：** [[00-知识地图/专题说明/03 ICE、STUN、TURN 与传输安全|03 ICE、STUN、TURN 与传输安全]]
+- **回看：** [[RTC 知识总览]] · [[00-知识地图/学习路线/学习进度模板|学习进度]] · [[00-知识地图/学习路线/RTC 工程师学习路线.canvas|阶段路线]]
+
+> 读完先回所属专题做练习/验收，再点下一篇。内部链接最多再追一层；不影响理解的陌生词先记下。
 
 ## 图谱关系
 

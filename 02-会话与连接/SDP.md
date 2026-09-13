@@ -2,11 +2,17 @@
 aliases: [Session Description Protocol, 会话描述协议]
 tags: [rtc/concept, rtc/signaling]
 type: concept
+status: growing
 ---
 
 # SDP
 
-## 定义
+> [!tip] 阅读提示
+> **前置：** 无强前置；可先从本篇一句话说明读起。
+> **初读：** 先读「一句话说明」和「核心机制」，弄清 SDP 解决什么问题、不负责什么。
+> **深入：** 「工程要点」、「工作流程或状态流」、「工程实现与取舍」 在实现、联调或排障时再读。
+
+## 一句话说明
 
 SDP（Session Description Protocol）是一种描述会话能力和意图的文本格式，不负责传输信令，也不负责实际打洞。WebRTC 用它表达媒体段、收发方向、编解码能力、ICE 凭据、候选和 DTLS 指纹等协商参数。
 
@@ -16,6 +22,19 @@ SDP（Session Description Protocol）是一种描述会话能力和意图的文�
 - `a=rtpmap`、`a=fmtp` 和 `a=rtcp-fb` 描述负载类型、格式参数和反馈能力；动态 payload type 只能在双方正确映射后使用。
 - `a=group:BUNDLE`、`a=rtcp-mux` 等属性允许多个媒体段复用传输；`a=ice-ufrag`、`a=ice-pwd` 和 candidate 属性关联 ICE 代次与地址。
 - `a=fingerprint`、`a=setup` 表达 DTLS 身份校验和握手角色。SDP 写有地址并不代表该地址可达，实际路径仍由 ICE 检查决定。
+
+```mermaid
+flowchart TD
+    S["Session 级描述<br/>v=、o=、s=、t=、group:BUNDLE"] --> A["audio m= 段<br/>mid、方向、codec、rtcp-fb"]
+    S --> V["video m= 段<br/>mid、方向、codec、fmtp"]
+    S --> D["application m= 段<br/>SCTP/DataChannel"]
+    A --> T["传输与安全属性<br/>ICE 凭据/候选、fingerprint、setup"]
+    V --> T
+    D --> T
+    T --> X["Offer/Answer 接受的共同描述"]
+```
+
+属性究竟位于 session level 还是 media level 要按规范和继承规则解析，图中只是把阅读视角分组。不能根据文本缩进猜层级，也不能把同名属性从一个 `m=` 段随意搬到另一个媒体段。
 
 ## 工程要点
 
@@ -71,6 +90,16 @@ SDP 是描述，不是传输协议；其中出现的 IP/端口、candidate 或 f
 ## 示例场景
 
 发送端新增屏幕共享轨道后，生成带新 video m-line 或复用现有 transceiver 的 Offer。接收端检查 mid、方向、codec 和 msid 后应答；即使 SDP 设置成功，仍需等待新 SSRC 的 RTP、解码和渲染首帧来确认共享真正可见。
+
+## 阅读导航
+
+- **上一篇：** [[Offer Answer]]
+- **下一篇：** [[MediaStream Track 与 Transceiver]]
+- **所属专题：** [[00-知识地图/专题说明/02 信令与 SDP 协商|02 信令与 SDP 协商]]
+- **回看：** [[RTC 知识总览]] · [[00-知识地图/学习路线/学习进度模板|学习进度]] · [[00-知识地图/学习路线/RTC 工程师学习路线.canvas|阶段路线]]
+
+
+> 读完先回所属专题做练习/验收，再点下一篇。内部链接最多再追一层；不影响理解的陌生词先记下。
 
 ## 图谱关系
 

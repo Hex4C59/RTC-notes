@@ -2,11 +2,17 @@
 aliases: [RTCDataChannel, WebRTC 数据通道]
 tags: [rtc/concept, rtc/data-channel, rtc/transport]
 type: concept
+status: growing
 ---
 
 # RTCDataChannel 与 SCTP
 
-## 定义
+> [!tip] 阅读提示
+> **前置：** 无强前置；可先从本篇一句话说明读起。
+> **初读：** 先读「一句话说明」和「核心机制」，弄清 RTCDataChannel 与 SCTP 解决什么问题、不负责什么。
+> **深入：** 「工程要点」、「工作流程或状态流」、「工程实现与取舍」 在实现、联调或排障时再读。
+
+## 一句话说明
 
 `RTCDataChannel` 是 WebRTC 对等连接上的应用数据通道。它不承载 RTP 媒体，而是在已建立的 ICE 路径和 DTLS 安全层上运行 SCTP 关联，再通过 DCEP 协商通道参数。SCTP 提供面向消息、多流、可靠或部分可靠以及有序或无序传输能力。
 
@@ -16,6 +22,20 @@ type: concept
 - `ordered` 控制消息是否按发送顺序交付；`maxRetransmits` 或 `maxPacketLifeTime` 允许部分可靠传输，二者不能同时设置。可靠有序更像 TCP，部分可靠或无序更适合时效性数据，但底层仍是 SCTP。
 - SCTP 关联由 DTLS 保护，并复用 ICE 建立的传输路径。连接建立不代表通道已经打开，应等待 `readyState === "open"`。
 - `bufferedAmount` 反映尚未交给底层发送的数据量；`bufferedAmountLowThreshold` 和 `bufferedamountlow` 可用于应用层背压。
+
+```mermaid
+flowchart TD
+    APP["应用消息<br/>聊天、控制、文件块"] --> Q{"RTCDataChannel<br/>readyState=open？"}
+    Q -->|否| W["等待 open 或报告关闭"]
+    Q -->|是| B{"bufferedAmount<br/>低于上限？"}
+    B -->|否| P["暂停生产<br/>等待 bufferedamountlow"]
+    B -->|是| S["SCTP 消息、多流与可靠性策略"]
+    S --> D["DTLS 加密保护"]
+    D --> I["ICE selected pair"]
+    I --> NET["网络"]
+```
+
+图中的背压判断属于应用必须维护的发送节奏。SCTP 提供消息和可靠性能力，但不能让无限增长的 `bufferedAmount` 自动变成低延迟，也不能保证大文件传输不影响共享路径上的媒体。
 
 ## 工程要点
 
@@ -71,6 +91,16 @@ SCTP 面向消息并支持多流，每条通道可选择有序或无序、可靠
 ## 示例场景
 
 屏幕协作应用用可靠有序通道发送控制命令，用无序且短生命周期的通道发送鼠标位置。鼠标位置过期后无需重传；控制命令则等待 open、受 bufferedAmount 限制，并带序号防止旧状态覆盖新状态。
+
+## 阅读导航
+
+- **上一篇：** [[WebRTC 拓扑选择]]
+- **下一篇：** [[00-知识地图/专题说明/02 信令与 SDP 协商|02 信令与 SDP 协商]]（本专题配套详解已读完，进入下一专题说明）
+- **所属专题：** [[00-知识地图/专题说明/01 RTC 系统与低延迟目标|01 RTC 系统与低延迟目标]]
+- **回看：** [[RTC 知识总览]] · [[00-知识地图/学习路线/学习进度模板|学习进度]] · [[00-知识地图/学习路线/RTC 工程师学习路线.canvas|阶段路线]]
+
+
+> 读完先回所属专题做练习/验收，再点下一篇。内部链接最多再追一层；不影响理解的陌生词先记下。
 
 ## 图谱关系
 

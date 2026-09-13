@@ -2,13 +2,19 @@
 aliases: [Datagram Transport Layer Security, 数据报传输层安全]
 tags: [rtc/concept, rtc/security]
 type: concept
+status: growing
 ---
 
 # DTLS
 
-## 定义
+> [!tip] 阅读提示
+> **前置：** [[TLS]]、[[SDP]]。
+> **初读：** 先读「一句话说明」和「核心机制」，弄清 DTLS 解决什么问题、不负责什么。
+> **深入：** 「工程要点」、「工作流程或状态流」、「工程实现与取舍」 在实现、联调或排障时再读。
 
-DTLS 是面向数据报传输的 TLS 变体，为 WebRTC 端点提供握手认证、机密性、完整性和密钥协商。它运行在 ICE 选出的路径之上，并把派生密钥交给 SRTP 或 SCTP 使用；它不是信令通道本身。
+## 一句话说明
+
+DTLS 是面向数据报传输的 [[TLS]] 变体，为 WebRTC 端点提供握手认证、机密性、完整性和密钥协商。它运行在 ICE 选出的路径之上，并把派生密钥交给 SRTP 或 SCTP 使用；它不是信令通道本身。
 
 ## 核心机制
 
@@ -16,6 +22,22 @@ DTLS 是面向数据报传输的 TLS 变体，为 WebRTC 端点提供握手认�
 - ICE 先提供可达五元组，DTLS 再在其上完成 ClientHello、证书和 Finished 等握手。握手失败时，要区分路径不可达、指纹不匹配、版本/套件不兼容和证书问题。
 - DTLS-SRTP 从已认证的 DTLS 会话导出 SRTP/SRTCP 密钥；数据通道使用 SCTP over DTLS，不能把 SCTP 明文暴露在公网。
 - ICE restart 通常只更换路径和 ICE 凭据；只要协商的安全身份和角色仍适用，不应把每次路径变化都误判成完整 DTLS 重握手。
+
+```mermaid
+sequenceDiagram
+    participant A as DTLS 发起方
+    participant B as DTLS 响应方
+    Note over A,B: 信令已交换 fingerprint 与 setup，ICE 路径已可用
+    A->>B: ClientHello
+    B-->>A: ServerHello、Certificate 等握手消息
+    A->>A: 校验证书与 SDP fingerprint
+    A->>B: Certificate/密钥证明与 Finished（依协商版本）
+    B->>B: 校验对端身份与 Finished
+    B-->>A: Finished
+    Note over A,B: exporter 派生 SRTP/SRTCP 密钥；SCTP 可在 DTLS 上运行
+```
+
+图中消息是理解角色和验证点的主线，不是固定报文模板；具体顺序取决于 DTLS 版本、密码套件、是否双向证书认证以及实现。UDP 丢包时握手 flight 还可能重传，不能只按抓包行数判断双方执行了多次独立握手。
 
 ## 工程要点
 
@@ -72,9 +94,19 @@ DTLS 继承 TLS 的认证和密钥协商，但面向可能丢失、乱序的 UDP
 
 两端 ICE selected pair 已变为 relay，但连接仍没有远端音频。日志显示 DTLS ClientHello 发出后持续超时，TURN 统计也没有返回包。此时先检查 TURN 双向通道和 MTU，而不是重启编码器；路径恢复后 DTLS 完成，SRTP 才开始解密媒体。
 
+## 阅读导航
+
+- **上一篇：** [[TLS]]
+- **下一篇：** [[SRTP]]
+- **所属专题：** [[00-知识地图/专题说明/03 ICE、STUN、TURN 与传输安全|03 ICE、STUN、TURN 与传输安全]]
+- **回看：** [[RTC 知识总览]] · [[00-知识地图/学习路线/学习进度模板|学习进度]] · [[00-知识地图/学习路线/RTC 工程师学习路线.canvas|阶段路线]]
+
+> 读完先回所属专题做练习/验收，再点下一篇。内部链接最多再追一层；不影响理解的陌生词先记下。
+
 ## 图谱关系
 
 - 身份输入：[[SDP]]携带 fingerprint 和 setup 协商参数。
+- 字节流对照：[[TLS]]说明证书链、密钥派生和可靠字节流上的 Record；DTLS 另外处理数据报丢失、乱序与分片。
 - 下层路径：[[ICE 连通性检查与选路]]先验证 DTLS 报文可达。
 - 媒体输出：[[SRTP]]使用 DTLS-SRTP 导出的密钥保护 RTP/RTCP。
 - 数据输出：[[RTCDataChannel 与 SCTP]]在 DTLS 上建立安全数据通道。

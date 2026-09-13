@@ -2,11 +2,17 @@
 aliases: [RTCPeerConnection 会话生命周期, WebRTC 建连流程]
 tags: [rtc/concept, rtc/session, rtc/signaling]
 type: concept
+status: growing
 ---
 
 # WebRTC 会话生命周期
 
-## 定义
+> [!tip] 阅读提示
+> **前置：** 无强前置；可先从本篇一句话说明读起。
+> **初读：** 先读「一句话说明」和「核心机制」，弄清 WebRTC 会话生命周期 解决什么问题、不负责什么。
+> **深入：** 「工程要点」、「工作流程或状态流」、「工程实现与取舍」 在实现、联调或排障时再读。
+
+## 一句话说明
 
 WebRTC 会话生命周期描述一个 `RTCPeerConnection` 从创建、协商和连通，到媒体/数据收发、网络变化、失败恢复及关闭的完整状态演进。它把业务层的呼叫状态、信令状态、ICE 状态、DTLS 状态和媒体收发状态分开观察；任何一层成功，都不能单独证明用户已经可以正常通话。
 
@@ -36,6 +42,24 @@ WebRTC 会话生命周期描述一个 `RTCPeerConnection` 从创建、协商和�
 3. **checking**：候选对执行 STUN 检查，选定路径后进入 connected/completed；DTLS 同步推进。
 4. **media/data**：SRTP/RTP、SRTCP 和 SCTP 开始收发，轨道、解码、渲染和 DataChannel 各自有可观测状态。
 5. **disconnected/restart/failed/closed**：网络变化可触发 ICE restart；不可恢复时停止源、关闭通道和释放信令/计时器。
+
+```mermaid
+flowchart LR
+    A["创建 PeerConnection<br/>添加 Track / Transceiver / DataChannel"] --> B["Offer / Answer<br/>交换 SDP 与候选"]
+    B --> C["ICE gathering 与候选对检查<br/>选出可达路径"]
+    C --> D["DTLS 握手<br/>建立安全上下文"]
+    D --> E["SRTP / SRTCP / SCTP 收发"]
+    E --> F["首包、首帧、播放与业务可用证据"]
+    F --> G["持续 consent、统计与轨道维护"]
+    G --> H{"网络或协商条件变化？"}
+    H -- "可恢复" --> I["ICE restart 或重新协商<br/>隔离新旧 generation"]
+    I --> C
+    H -- "无需恢复" --> G
+    H -- "挂断或不可恢复" --> J["停止生产与发送<br/>关闭通道并幂等清理"]
+```
+
+> [!note] 图的边界
+> 箭头表示主要因果依赖，不表示所有步骤在时间上完全串行。候选收集可以与 SDP 交换交错，DTLS 与部分 ICE 状态也会重叠推进；“业务可用”仍要由首包、首帧、音频播放或 DataChannel 事件分别证明。
 
 ## 关键对象、字段与报文
 
@@ -72,6 +96,15 @@ WebRTC 会话生命周期描述一个 `RTCPeerConnection` 从创建、协商和�
 ## 示例场景
 
 用户看到“已连接”但远端黑屏。时间线显示 signaling/ICE/DTLS 都成功，RTP bytesReceived 增长，然而 decoder 无输出；进一步发现 Offer 中视频 codec 参数与解码器能力不匹配。连接生命周期日志避免把问题错误归因于 NAT。
+
+## 阅读导航
+
+- **上一篇：** [[MediaStream Track 与 Transceiver]]
+- **下一篇：** [[信令与 PeerConnection 状态机]]
+- **所属专题：** [[00-知识地图/专题说明/02 信令与 SDP 协商|02 信令与 SDP 协商]]
+- **回看：** [[RTC 知识总览]] · [[00-知识地图/学习路线/学习进度模板|学习进度]] · [[00-知识地图/学习路线/RTC 工程师学习路线.canvas|阶段路线]]
+
+> 读完先回所属专题做练习/验收，再点下一篇。内部链接最多再追一层；不影响理解的陌生词先记下。
 
 ## 图谱关系
 

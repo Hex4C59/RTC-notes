@@ -2,11 +2,17 @@
 aliases: [Interactive Connectivity Establishment, 交互式连接建立]
 tags: [rtc/concept, rtc/connectivity]
 type: concept
+status: growing
 ---
 
 # ICE
 
-## 定义
+> [!tip] 阅读提示
+> **前置：** 无强前置；可先从本篇一句话说明读起。
+> **初读：** 先读「一句话说明」和「核心机制」，弄清 ICE 解决什么问题、不负责什么。
+> **深入：** 「工程要点」、「工作流程或状态流」、「工程实现与取舍」 在实现、联调或排障时再读。
+
+## 一句话说明
 
 ICE（Interactive Connectivity Establishment）是组合地址发现、候选交换、连通性检查和路径选择的框架。它使用 STUN 发现或验证端点地址，使用 TURN 提供中继，并在候选对中选出一条双方可达的传输路径。
 
@@ -16,6 +22,17 @@ ICE（Interactive Connectivity Establishment）是组合地址发现、候选交
 - 双方通过 SDP 或 Trickle ICE 交换候选和 ICE 凭据，将本地候选与远端候选组成候选对。
 - Agent 按优先级建立检查清单，使用 STUN Binding 检查候选对的双向可达性，再由 controlling/controlled 角色提名并选定 pair。
 - ICE 还承担路径上的对端许可和持续可达性维护。选路成功后，DTLS、SRTP 和 SCTP 才能使用这条路径承载数据。
+
+```mermaid
+flowchart LR
+    G["收集本地候选<br/>host、srflx、relay"] --> X["通过信令交换<br/>候选与 ufrag/pwd"]
+    X --> P["组成候选对<br/>建立检查清单"]
+    P --> T["STUN 连通性检查<br/>验证双向可达"]
+    T --> N["提名并选择<br/>selected pair"]
+    N --> D["DTLS、SRTP、SCTP<br/>使用选定路径"]
+    D --> C["consent freshness<br/>持续确认可达与许可"]
+    C -. "路径失效或网络变化" .-> G
+```
 
 ## 工程要点
 
@@ -71,6 +88,16 @@ ICE 将“地址发现”和“可达性验证”拆开：STUN 看到的映射�
 ## 示例场景
 
 浏览器 A 在家庭网络，浏览器 B 在企业网络。双方交换 host、srflx、relay 候选；host 被过滤，srflx 检查超时，relay 成功。ICE 选定 relay 后，DTLS 和 SRTP 在该路径建立，业务层不需要知道具体中继实现细节，但应记录路径类型和延迟。
+
+## 阅读导航
+
+- **上一篇：** [[TURN]]
+- **下一篇：** [[ICE 候选与候选对]]
+- **所属专题：** [[00-知识地图/专题说明/03 ICE、STUN、TURN 与传输安全|03 ICE、STUN、TURN 与传输安全]]
+- **回看：** [[RTC 知识总览]] · [[00-知识地图/学习路线/学习进度模板|学习进度]] · [[00-知识地图/学习路线/RTC 工程师学习路线.canvas|阶段路线]]
+
+
+> 读完先回所属专题做练习/验收，再点下一篇。内部链接最多再追一层；不影响理解的陌生词先记下。
 
 ## 图谱关系
 

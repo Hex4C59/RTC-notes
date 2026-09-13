@@ -2,11 +2,17 @@
 aliases: [FFmpeg FilterGraph, 重采样, 缩放]
 tags: [rtc/concept, rtc/media, rtc/ffmpeg]
 type: concept
+status: growing
 ---
 
 # FilterGraph 重采样与缩放
 
-## 定义
+> [!tip] 阅读提示
+> **前置：** [[AVPacket 与 AVFrame]]。
+> **初读：** 先读「一句话说明」和「核心机制」，弄清 FilterGraph 重采样与缩放 解决什么问题、不负责什么。
+> **深入：** 「工程要点」、「关键参数与取舍」、「常见误区与故障」 在实现、联调或排障时再读。
+
+## 一句话说明
 
 FFmpeg FilterGraph 是由输入、过滤器和输出组成的有向图，用于在 `AVFrame` 域进行重采样、格式转换、缩放、裁剪、混音和其他媒体处理。它不替代解码器或容器层：压缩包先解码成帧，过滤后的帧再交给编码器或播放设备。
 
@@ -16,6 +22,22 @@ FFmpeg FilterGraph 是由输入、过滤器和输出组成的有向图，用于�
 - 图中的每个链接有输入/输出格式约束，过滤器可能协商或插入隐式转换。`buffersrc` 接收帧，过滤器处理 PTS 和格式，`buffersink` 输出满足下游约束的帧。
 - `AVFrame` 的 PTS 会沿图传播或按过滤器语义改变，音频重采样在边界处可能产生不同 `nb_samples`；输出时间必须重新检查。
 - CLI 中的 `-vf scale=...`、`-af aresample=...` 是图的简写；复杂音视频处理使用 `-filter_complex` 或 libavfilter API 表达明确的输入、输出标签和生命周期。
+
+```mermaid
+flowchart LR
+    A[解码后的 AVFrame] --> B[buffersrc / abuffer]
+    B --> C{FilterGraph}
+    C --> D[音频: aresample / aformat / amix]
+    C --> E[视频: scale / format / crop]
+    D --> F[abuffersink]
+    E --> G[buffersink]
+    F --> H[目标采样率、格式、声道布局]
+    G --> I[目标尺寸、像素格式、色彩属性]
+    H --> J[编码器或音频设备]
+    I --> K[编码器或显示设备]
+```
+
+FilterGraph 位于解码后的 Frame 域。图中的 link 不只是“连线”，还携带格式和 time base 约束；配置阶段可能协商或插入转换，运行阶段过滤器还可能缓存帧，因此 source push 与 sink pull 也不保证一一对应。
 
 ## 工程要点
 
@@ -76,6 +98,16 @@ FilterGraph 由 source、link、filter、sink 组成。音频 link 带 sample ra
 ## 具体例子
 
 将 44.1 kHz 立体声重采样为 48 kHz 单声道时，输出每帧 `nb_samples` 不应简单按 44.1/48 的浮点结果截断；应使用 resampler 的实际返回值和剩余缓存。视频从 NV12 缩放到 I420 时，还要检查矩阵、range、每平面 stride 和下游编码器的可接受格式。
+
+## 阅读导航
+
+- **上一篇：** [[采集与渲染]]
+- **下一篇：** [[00-知识地图/专题说明/06 时间系统与音画同步|06 时间系统与音画同步]]（本专题配套详解已读完，进入下一专题说明）
+- **所属专题：** [[00-知识地图/专题说明/05 音视频数据、采集与播放|05 音视频数据、采集与播放]]
+- **回看：** [[RTC 知识总览]] · [[00-知识地图/学习路线/学习进度模板|学习进度]] · [[00-知识地图/学习路线/RTC 工程师学习路线.canvas|阶段路线]]
+
+
+> 读完先回所属专题做练习/验收，再点下一篇。内部链接最多再追一层；不影响理解的陌生词先记下。
 
 ## 图谱关系
 

@@ -2,11 +2,17 @@
 aliases: [ICE Candidate, ICE Candidate Pair]
 tags: [rtc/concept, rtc/connectivity]
 type: concept
+status: growing
 ---
 
 # ICE 候选与候选对
 
-## 定义
+> [!tip] 阅读提示
+> **前置：** 无强前置；可先从本篇一句话说明读起。
+> **初读：** 先读「一句话说明」和「核心机制」，弄清 ICE 候选与候选对 解决什么问题、不负责什么。
+> **深入：** 「工程要点」、「工作流程或状态流」、「工程实现与取舍」 在实现、联调或排障时再读。
+
+## 一句话说明
 
 ICE 候选是一个端点可用于接收数据的传输地址及其属性，通常包括 IP、端口、传输协议、类型、优先级、foundation 和所属媒体组件。候选对由本地候选与远端候选组成，是 ICE 实际检查一条网络路径的最小单位。
 
@@ -16,6 +22,29 @@ ICE 候选是一个端点可用于接收数据的传输地址及其属性，通�
 - ICE Agent 为候选分配优先级和 foundation，并将本地候选与远端同一组件、兼容协议的候选组合成候选对。BUNDLE 和 RTCP mux 会减少实际组件数量，但不改变候选对需要匹配可用媒体段的约束。
 - 候选通过 SDP 或 Trickle ICE 传给对端；`sdpMid`/`sdpMLineIndex` 将候选绑定到媒体段，end-of-candidates 表示该代候选收集完成。
 - 候选对是否优先不等于是否可用，最终仍需经过连接检查和提名；成功的候选对可能不是地址字典序上的第一对。
+
+```mermaid
+flowchart LR
+    subgraph A["端点 A 的候选来源"]
+        AH["host<br/>本机接口"]
+        AS["srflx<br/>STUN 观察的 NAT 映射"]
+        AR["relay<br/>TURN 分配地址"]
+    end
+    subgraph B["端点 B 的候选来源"]
+        BH["host"]
+        BS["srflx"]
+        BR["relay"]
+    end
+    AH --> P["兼容的本地候选 + 远端候选<br/>组成 candidate pair"]
+    AS --> P
+    AR --> P
+    BH --> P
+    BS --> P
+    BR --> P
+    P --> K["按优先级检查<br/>可达不等于先到"]
+```
+
+图中的连线表示候选会参与兼容性组合，不表示任意两项都一定形成有效 pair；组件、地址族、传输协议、媒体段和当前 ICE generation 都必须匹配。
 
 ## 工程要点
 
@@ -70,6 +99,16 @@ host、srflx、relay 反映地址取得方式，而非简单的“好/坏”等�
 ## 示例场景
 
 办公室端点同时产生 host、srflx 和 relay 候选。host pair 因企业防火墙失败，srflx pair 检查超时，relay pair 成功并被提名；诊断记录应说明每类候选的失败阶段，而不是只留下“ICE 连接成功”。
+
+## 阅读导航
+
+- **上一篇：** [[ICE]]
+- **下一篇：** [[ICE 连通性检查与选路]]
+- **所属专题：** [[00-知识地图/专题说明/03 ICE、STUN、TURN 与传输安全|03 ICE、STUN、TURN 与传输安全]]
+- **回看：** [[RTC 知识总览]] · [[00-知识地图/学习路线/学习进度模板|学习进度]] · [[00-知识地图/学习路线/RTC 工程师学习路线.canvas|阶段路线]]
+
+
+> 读完先回所属专题做练习/验收，再点下一篇。内部链接最多再追一层；不影响理解的陌生词先记下。
 
 ## 图谱关系
 

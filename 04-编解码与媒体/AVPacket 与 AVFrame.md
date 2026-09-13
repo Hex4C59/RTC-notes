@@ -2,11 +2,17 @@
 aliases: [AVPacket, AVFrame]
 tags: [rtc/concept, rtc/media, rtc/ffmpeg]
 type: concept
+status: growing
 ---
 
 # AVPacket 与 AVFrame
 
-## 定义
+> [!tip] 阅读提示
+> **前置：** [[复用与解复用]]。
+> **初读：** 先读「一句话说明」和「核心机制」，弄清 AVPacket 与 AVFrame 解决什么问题、不负责什么。
+> **深入：** 「工程要点」、「状态与所有权步骤」、「关键参数与取舍」 在实现、联调或排障时再读。
+
+## 一句话说明
 
 `AVPacket` 表示一个压缩数据包及其流索引、时间戳、持续时间和附加信息；`AVFrame` 表示解码后或待编码的音频/视频帧，包含像素/样本平面、格式、尺寸/样本数、linesize 和时间信息。Packet 是压缩域对象，Frame 是媒体样本域对象，二者不是一一对应关系。
 
@@ -17,6 +23,21 @@ type: concept
 - Packet 采用引用计数管理数据缓冲；使用 `av_packet_ref/move_ref/unref` 表达共享、转移和释放。Frame 同样可能引用解码器、硬件表面或过滤器缓冲区。
 - `avcodec_send_packet()` 接受的是 `const AVPacket *`。当它返回 0 时，解码器已经接受该输入，调用方可以 `av_packet_unref()` 或复用自己的 packet；解码器可能保留底层引用/副本。若返回 `AVERROR(EAGAIN)`，输入没有被接受，调用方必须保留 packet 不变，先 receive 输出，再重试同一个 packet，不能直接 unref 或读取下一个包。
 - 调用方传给 `avcodec_receive_frame()` 的 `AVFrame` 是可复用容器；下一次 receive 可能 unref/覆盖其引用。若要跨线程或长期排队，使用 `av_frame_ref()`/`av_frame_clone()` 保存对底层 buffer 的引用，消费完再 `av_frame_unref()`。
+
+```mermaid
+flowchart LR
+    A[Demuxer] -->|产生压缩数据| B[调用方 AVPacket]
+    B -->|send 返回 0| C[Decoder 内部引用 / 缓冲]
+    B -->|send 返回 EAGAIN| D[保留同一个 Packet]
+    D -->|先 receive| C
+    C -->|0..N 次 receive| E[可复用 AVFrame 容器]
+    E -->|同步消费后 unref| F[渲染 / 过滤]
+    E -->|异步排队前 ref 或 clone| G[Frame 队列持有独立引用]
+    G --> F
+    F --> H[消费完成后 unref]
+```
+
+图中的箭头表示 API 状态和引用责任，不表示一个 Packet 必然产生一个 Frame。尤其是 `EAGAIN` 分支，输入还没有被解码器接受，调用方不能释放或替换它。
 
 ## 工程要点
 
@@ -80,6 +101,16 @@ packet 队列的时间单位通常是压缩流 time base，frame 队列使用 fr
 ## 具体例子
 
 解码线程调用 send 后得到 0，可以立即 unref 自己的 packet，因为解码器已经按 API 需要保留数据；但若得到 EAGAIN，packet 仍是待提交输入，必须先 receive 已排队的 frame，再重试同一个 packet。若要把 receive 得到的 frame 放入显示队列，应 `av_frame_ref` 到队列对象，不能把解码线程复用的临时 frame 指针直接入队。
+
+## 阅读导航
+
+- **上一篇：** [[复用与解复用]]
+- **下一篇：** [[FFmpeg 解码状态机]]
+- **所属专题：** [[00-知识地图/专题说明/13 RTC 媒体处理与 FFmpeg|13 RTC 媒体处理与 FFmpeg]]
+- **回看：** [[RTC 知识总览]] · [[00-知识地图/学习路线/学习进度模板|学习进度]] · [[00-知识地图/学习路线/RTC 工程师学习路线.canvas|阶段路线]]
+
+
+> 读完先回所属专题做练习/验收，再点下一篇。内部链接最多再追一层；不影响理解的陌生词先记下。
 
 ## 图谱关系
 

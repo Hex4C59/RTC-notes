@@ -2,11 +2,17 @@
 aliases: [Session Traversal Utilities for NAT, NAT 会话穿越实用工具]
 tags: [rtc/concept, rtc/connectivity]
 type: concept
+status: growing
 ---
 
 # STUN
 
-## 定义
+> [!tip] 阅读提示
+> **前置：** 无强前置；可先从本篇一句话说明读起。
+> **初读：** 先读「一句话说明」和「核心机制」，弄清 STUN 解决什么问题、不负责什么。
+> **深入：** 「工程要点」、「工作流程或状态流」、「工程实现与取舍」 在实现、联调或排障时再读。
+
+## 一句话说明
 
 STUN（Session Traversal Utilities for NAT）是一组用于发现外部映射、执行 Binding 请求和承载 ICE 检查的工具协议。它能帮助端点获得 server-reflexive 地址，但不保证任意 NAT、防火墙或对端组合都能直连。
 
@@ -35,6 +41,22 @@ STUN（Session Traversal Utilities for NAT）是一组用于发现外部映射�
 3. ICE 连通性检查复用 STUN 消息，使用会话级 ufrag/pwd 验证请求和响应，必要时携带优先级、角色和提名属性。
 4. 连接建立后按周期发送 consent freshness；超时或错误响应使上层重新检查、切换 relay 或 restart。
 5. 事务成功、失败、超时和关闭时分别释放事务表与定时器。
+
+```mermaid
+sequenceDiagram
+    participant C as "客户端（192.168.1.10:50000）"
+    participant N as "NAT"
+    participant S as "STUN Server"
+    C->>N: "Binding Request"
+    Note over N: "建立映射<br/>192.168.1.10:50000 ↔ 198.51.100.7:62000"
+    N->>S: "源地址变为 198.51.100.7:62000"
+    S-->>N: "Binding Response<br/>XOR-MAPPED-ADDRESS=198.51.100.7:62000"
+    N-->>C: "返回观察结果"
+    Note over C: "形成 srflx candidate<br/>交给 ICE 检查，不等于已经能与对端直连"
+```
+
+> [!note] 图的边界
+> 图中地址使用文档示例网段，只表示一条具体请求路径上的观察结果。换一个 STUN Server、出口接口或时间点，NAT 可能建立不同映射；最终能否传媒体仍由双方候选对的 ICE 连通性检查决定。
 
 ## 关键对象、字段与报文
 
@@ -71,6 +93,16 @@ STUN 是工具协议，不是“打洞成功”的保证。服务器只能告诉
 ## 示例场景
 
 客户端向两个 STUN server 查询，分别看到相同和不同的外部端口。应用不直接选择其中一个“更像公网”的地址，而是把结果作为候选交给 ICE；若对端检查无法回包，最终使用 TURN relay，并保留查询差异供 NAT 诊断。
+
+## 阅读导航
+
+- **上一篇：** [[NAT 映射与过滤行为]]
+- **下一篇：** [[TURN]]
+- **所属专题：** [[00-知识地图/专题说明/03 ICE、STUN、TURN 与传输安全|03 ICE、STUN、TURN 与传输安全]]
+- **回看：** [[RTC 知识总览]] · [[00-知识地图/学习路线/学习进度模板|学习进度]] · [[00-知识地图/学习路线/RTC 工程师学习路线.canvas|阶段路线]]
+
+
+> 读完先回所属专题做练习/验收，再点下一篇。内部链接最多再追一层；不影响理解的陌生词先记下。
 
 ## 图谱关系
 

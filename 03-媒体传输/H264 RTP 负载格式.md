@@ -2,6 +2,7 @@
 aliases: [H.264 over RTP, RFC 6184, AVC RTP payload]
 tags: [rtc/concept, rtc/transport, rtc/video, rtc/protocol]
 type: concept
+status: growing
 ---
 
 # H264 RTP 负载格式
@@ -10,6 +11,8 @@ type: concept
 > **前置：** [[H264]]、[[RTP]]、[[SDP]]。
 > **初读：** 先读“四个不能混淆的边界”“H.264 NAL 头”“SDP 协商”和“三种主要包化格式”，分清帧、NALU 与 RTP 包。
 > **深入：** 发送、接收状态机和解析伪代码留到打包、组帧或抓包练习时阅读。
+
+## 一句话说明
 
 这篇笔记描述 H.264 NAL 单元如何映射到 RTP，依据 RFC 6184。H.264 码流的预测、变换和参考帧见 [[H264]]；这里重点是单 NALU、STAP-A/FU-A、访问单元组装和 WebRTC 实现边界。
 
@@ -204,6 +207,16 @@ Wireshark 中检查 `rtp.p_type`、`rtp.seq`、`rtp.timestamp`、`rtp.marker`，
 - MTU 减小后验证分片数量变化，确保没有 IP 层大分片；SRTP tag/头扩展开销也必须计入预算。
 
 常见症状：黑屏但 RTP 包持续到达，优先查 FU-A 首尾/序号、SPS/PPS、profile-level-id 和 SRTP 解密；只有关键帧后恢复则常见于参考帧链已损坏；画面撕裂或跨帧内容混合则查 timestamp/AU assembler 和 STAP-A 长度解析。
+
+## 阅读导航
+
+- **上一篇：** [[RTP 流标识与复用]]
+- **下一篇：** [[Opus RTP 负载格式]]
+- **所属专题：** [[00-知识地图/专题说明/09 RTP 打包、解析与传输|09 RTP 打包、解析与传输]]
+- **回看：** [[RTC 知识总览]] · [[00-知识地图/学习路线/学习进度模板|学习进度]] · [[00-知识地图/学习路线/RTC 工程师学习路线.canvas|阶段路线]]
+
+
+> 读完先回所属专题做练习/验收，再点下一篇。内部链接最多再追一层；不影响理解的陌生词先记下。
 
 ## 图谱关系
 

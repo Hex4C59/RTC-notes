@@ -93,11 +93,21 @@
     {
       "id": "g2",
       "type": "text",
-      "text": "## 03.3 加密与身份\n\nP1\n\n配套详解：[[DTLS]] · [[SRTP]] · [[SRTP 与 SRTCP 报文保护]]",
+      "text": "## 03.3 加密与身份\n\nP1\n\n配套详解：[[TLS]] · [[DTLS]] · [[SRTP]] · [[SRTP 与 SRTCP 报文保护]]",
       "x": 940,
       "y": 300,
       "width": 420,
-      "height": 250,
+      "height": 290,
+      "color": "#2788D1"
+    },
+    {
+      "id": "p2-tls",
+      "type": "text",
+      "text": "### [[00-知识地图/专题说明/03 ICE、STUN、TURN 与传输安全#TLS 握手、证书与加密记录|TLS 握手、证书与加密记录]]\n\n从 HTTPS 与 RTMPS 的真实连接理解证书验证、临时密钥协商和加密 Record。\n\n[[TLS|打开完整详解]]",
+      "x": 995,
+      "y": 670,
+      "width": 365,
+      "height": 300,
       "color": "#2788D1"
     },
     {
@@ -105,7 +115,7 @@
       "type": "text",
       "text": "### [[00-知识地图/专题说明/03 ICE、STUN、TURN 与传输安全#DTLS 与 SRTP/SRTCP|DTLS 与 SRTP/SRTCP]]\n\n理解握手/密钥建立与媒体保护的分工；WebRTC 媒体不是简单当普通 TLS 字节流发送。\n\n[[00-知识地图/专题说明/03 ICE、STUN、TURN 与传输安全#03.3 加密与身份 · P1|学习说明与练习]]",
       "x": 995,
-      "y": 670,
+      "y": 1020,
       "width": 365,
       "height": 300,
       "color": "#2788D1"
@@ -115,7 +125,7 @@
       "type": "text",
       "text": "### [[00-知识地图/专题说明/03 ICE、STUN、TURN 与传输安全#指纹、完整性与抗重放|指纹、完整性与抗重放]]\n\n认识证书指纹、认证和重放防护；仅“看不到明文”不足以说明安全性完整。\n\n[[00-知识地图/专题说明/03 ICE、STUN、TURN 与传输安全#03.3 加密与身份 · P1|学习说明与练习]]",
       "x": 995,
-      "y": 1020,
+      "y": 1370,
       "width": 365,
       "height": 300,
       "color": "#2788D1"
@@ -125,7 +135,7 @@
       "type": "text",
       "text": "### [[00-知识地图/专题说明/03 ICE、STUN、TURN 与传输安全#链路加密与端到端加密|链路加密与端到端加密]]\n\n端点到 SFU 的加密不自动等于参会者之间 E2EE，要明确谁持有密钥、能看到什么。\n\n[[00-知识地图/专题说明/03 ICE、STUN、TURN 与传输安全#03.3 加密与身份 · P1|学习说明与练习]]",
       "x": 995,
-      "y": 1370,
+      "y": 1720,
       "width": 365,
       "height": 300,
       "color": "#2788D1"
@@ -250,6 +260,15 @@
       "fromSide": "bottom",
       "toNode": "g2",
       "toSide": "top",
+      "toEnd": "arrow",
+      "color": "#2788D1"
+    },
+    {
+      "id": "g2-tls",
+      "fromNode": "g2",
+      "fromSide": "left",
+      "toNode": "p2-tls",
+      "toSide": "left",
       "toEnd": "arrow",
       "color": "#2788D1"
     },

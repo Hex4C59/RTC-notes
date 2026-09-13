@@ -2,11 +2,17 @@
 aliases: [MediaStreamTrack, RTCRtpTransceiver]
 tags: [rtc/concept, rtc/media, rtc/signaling]
 type: concept
+status: growing
 ---
 
 # MediaStream Track 与 Transceiver
 
-## 定义
+> [!tip] 阅读提示
+> **前置：** 无强前置；可先从本篇一句话说明读起。
+> **初读：** 先读「一句话说明」和「核心机制」，弄清 MediaStream Track 与 Transceiver 解决什么问题、不负责什么。
+> **深入：** 「工程要点」、「工作流程或状态流」、「工程实现与取舍」 在实现、联调或排障时再读。
+
+## 一句话说明
 
 `MediaStream` 是用于分组媒体轨道的容器；`MediaStreamTrack` 表示一个音频或视频源的逻辑输出；`RTCRtpSender` 和 `RTCRtpReceiver` 分别连接发送、接收媒体；`RTCRtpTransceiver` 则把同一个 `m=` 媒体段的发送器和接收器及其方向绑定起来。它们不是同一层的“流”对象。
 
@@ -17,12 +23,35 @@ type: concept
 - `sender.replaceTrack()` 可在同一发送单元内更换相同媒体类型的源，常用于换摄像头或屏幕源；若改变方向、编码能力或需要新增/移除媒体段，仍要重新协商。
 - `track.enabled` 适合暂时静音/停画；`track.stop()` 结束底层源。停止本地轨道、移除发送器和关闭 Transceiver 是不同的生命周期操作。
 
+```mermaid
+flowchart LR
+    SRC["摄像头、麦克风或屏幕源"] --> T["MediaStreamTrack<br/>一条逻辑媒体轨道"]
+    T -. "分组关系 msid" .-> MS["MediaStream<br/>轨道容器"]
+    T --> S["RTCRtpSender"]
+    S --> X["RTCRtpTransceiver<br/>mid + direction"]
+    X --> R["RTCRtpReceiver"]
+    R --> RT["远端 MediaStreamTrack"]
+    X -. "对应" .-> M["SDP m= 媒体段"]
+```
+
+这是一张对象关系图，不代表媒体字节必须依次复制经过所有 JavaScript 对象。`MediaStream` 主要提供轨道分组，真正的发送关系由 sender、transceiver、协商结果和底层 transport 共同决定。
+
 ## 工程要点
 
 - 业务层同时保存 `track.id`、sender、receiver、transceiver 和 `mid`，不要仅凭 `MediaStream.id` 判断传输关系。
 - 用 `replaceTrack` 做设备切换时检查 `readyState`、编码器兼容性和权限；换成不同媒体类型不能绕过协商约束。
 - `transceiver.direction`、新增轨道和停用媒体段会触发协商需求。应用必须处理 `negotiationneeded` 与同时 Offer 冲突。
 - 远端 `ontrack` 的到达不等于首帧已渲染，播放、解码和渲染状态应由客户端另行观测。
+
+## 阅读导航
+
+- **上一篇：** [[SDP]]
+- **下一篇：** [[WebRTC 会话生命周期]]
+- **所属专题：** [[00-知识地图/专题说明/02 信令与 SDP 协商|02 信令与 SDP 协商]]
+- **回看：** [[RTC 知识总览]] · [[00-知识地图/学习路线/学习进度模板|学习进度]] · [[00-知识地图/学习路线/RTC 工程师学习路线.canvas|阶段路线]]
+
+
+> 读完先回所属专题做练习/验收，再点下一篇。内部链接最多再追一层；不影响理解的陌生词先记下。
 
 ## 图谱关系
 
