@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>03 · 用序列号识别缺口</title>
+  <link rel="stylesheet" href="../assets/rtc-teach.css">
+  <script src="../assets/rtc-quiz.js" defer></script>
+</head>
+<body><main>
+  <p class="eyebrow">RTC 入门 · 约 5 分钟</p>
+  <h1>少了一个包，就等于丢了吗？</h1>
+  <p>接收端不能照到达顺序直接播放，也不能为等一个包无限停住。现在给每个包一个编号，练习判断眼前究竟发生了什么。</p>
+  <h2>朋友说话时，包走了不同的路</h2>
+  <p>朋友手机把连续的声音编码、打成 RTP 包发给你的电脑。假设这是同一条音频流，发出的包依次编号 100、101、102；你的电脑先收到 100，接着收到 102。</p>
+  <div class="packet-flow" aria-label="当前已收到 100 和 102，101 尚未收到"><span>100</span><span class="gap">101 ?</span><span>102</span></div>
+  <p>RTP 的 <strong>序列号</strong>按发送的包递增，接收端因此能看出当前少了 101。但仅凭此刻的收包情况，还不知道 101 是在路上、在本地被丢弃，还是再也不会到达。序列号也不是声音的播放时间；后者要看媒体时间戳和播放安排。</p>
+  <p>依据：<a href="https://www.rfc-editor.org/rfc/rfc3550.html#section-5.1">RFC 3550 §5.1</a>。本例只讨论同一 RTP 流、没有序号回绕的三个包；真实实现还需处理回绕、重复和流切换。</p>
+  <h2>看两眼接收日志</h2>
+  <section class="quiz" data-quiz data-right="对。100 后直接见到 102，当前观察到 101 的缺口。" data-wrong="再看编号：100 与 102 之间还有 101，此刻尚未收到。">
+    <p><strong>时刻 A：</strong>只收到 100、102。此刻记录应写什么？</p>
+    <div class="quiz-options"><button type="button" data-correct="true" aria-pressed="false">缺口</button><button type="button" data-correct="false" aria-pressed="false">连续</button></div>
+    <p data-feedback aria-live="polite"></p>
+  </section>
+  <section class="quiz" data-quiz data-right="对。101 后来到了；它之前只是暂缺。" data-wrong="101 现已收到，100、101、102 都在；最初的缺口被填上了。">
+    <p><strong>时刻 B：</strong>随后收到 101。现在这三个编号是怎样的？</p>
+    <div class="quiz-options"><button type="button" data-correct="false" aria-pressed="false">缺口</button><button type="button" data-correct="true" aria-pressed="false">连续</button></div>
+    <p data-feedback aria-live="polite"></p>
+  </section>
+  <div class="callout"><strong>关键判断：</strong>“眼下有缺口”是接收观察；“永久丢失”需要更多证据。包后来到了，也还要看它是否赶得上播放截止时间。</div>
+  <h2>发给老师的短答</h2>
+  <p>另一通话里，你只看到同一流的 200、201、203。请用自己的话回答：现在能确定什么？能否断定 202 永远丢失？如果 202 在播放截止后才到，能否补进刚才已播出的声音？写 2—3 句即可。</p>
+  <p>把答案发回对话；不清楚的地方也可以直接追问。点击练习只提供即时反馈，是否掌握要看你能否独立解释新例子。</p>
+  <nav><a href="0002-audio-path.html">上一课</a> · <a href="../reference/0002-rtp-sequence.html">本课速查卡</a> · <a href="../03-媒体传输/RTP.md">原笔记：RTP</a><p>推荐选读：<a href="https://www.rfc-editor.org/rfc/rfc3550.html#section-5.1">RFC 3550 §5.1</a> 中 Sequence Number 与 Timestamp 两段。</p></nav>
+</main></body></html>

@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>09 · 重传能否赶上播放</title>
+  <link rel="stylesheet" href="../assets/rtc-teach.css">
+  <script src="../assets/rtc-quiz.js" defer></script>
+</head>
+<body><main>
+  <p class="eyebrow">RTC 入门 · 第九课 · 约 4 分钟</p>
+  <h1>让对方再发一次，来得及吗？</h1>
+  <p>朋友的手机向你的电脑发送语音。电脑已经收到 300 和 302，301 仍未到，但距离播放还有一段时间。如果双方支持并启用了这种音频重传，电脑可以告诉手机：“我缺少 301，请尝试再发一次。”</p>
+  <p>这类反馈叫 <strong>NACK（Negative Acknowledgement，否定确认）</strong>，通过 RTCP 发送。RTCP 是配合 RTP 传递控制信息的协议；此处的反馈标明缺少的 RTP 序号，<strong>不携带那段缺失的声音</strong>。依据：<a href="https://www.rfc-editor.org/rfc/rfc4585.html#section-6.2.1">RFC 4585 §6.2.1</a>。</p>
+  <ol>
+    <li><strong>电脑 → 手机：</strong>发送缺少 301 的反馈。</li>
+    <li><strong>手机：</strong>检查是否还保存着对应数据，以及是否允许重传；若可以，安排发送。</li>
+    <li><strong>手机 → 电脑：</strong>重新传来原包对应的编码数据。</li>
+  </ol>
+  <p>这与 PLC 不同：PLC 在接收端估计替代音频；成功重传能带回原包对应的数据。不过，<strong>请求发出不代表重传一定成功，也不代表一定赶得上播放。</strong>发送端可能已删掉缓存，请求或重传的数据也可能丢失。当前序号有缺口仍不等于原包永远丢失；本课从“已经决定请求重传”开始，不展开乱序等待策略。</p>
+
+  <h2>把请求和返回的过程都算进去</h2>
+  <p><strong>把电脑发出请求的时刻记为 0 ms。</strong>电脑计划在 60 ms 开始播放 301 对应的声音，需要提前留出 5 ms 处理时间，因此数据最晚要在 <strong>55 ms</strong> 到达。这些是教学设定，不是默认参数。</p>
+  <p>假设原包一直未到，发送端仍有数据，请求和重传均不丢失；下表时间固定，用于演算，实际网络中的耗时只能估计，可能变化。</p>
+  <table>
+    <caption>一次重传经过的环节（单位：ms）</caption>
+    <thead><tr><th scope="col">环节</th><th scope="col">耗时</th></tr></thead>
+    <tbody>
+      <tr><td>请求从电脑传到手机</td><td>15</td></tr>
+      <tr><td>手机查找数据、处理并排队等待发送</td><td>10</td></tr>
+      <tr><td>重传数据从手机传回电脑</td><td>25</td></tr>
+    </tbody>
+  </table>
+  <p>重传数据到达时刻：0 + 15 + 10 + 25 = <strong>50 ms</strong>。再用 5 ms 处理，到 55 ms 已准备好，可以等到 60 ms 按计划播放。</p>
+  <section class="quiz" data-quiz data-right="对，数据在 50 ms 到达，早于最晚到达时刻 55 ms；处理后能赶上 60 ms 的计划播放。" data-wrong="数据在 50 ms 到达，再用 5 ms 处理，55 ms 就准备好了，能赶上 60 ms 开始播放。">
+    <p><strong>按上述固定耗时：</strong>这次重传能否赶上计划播放？</p>
+    <div class="quiz-options">
+      <button type="button" data-correct="true" aria-pressed="false">赶得上</button>
+      <button type="button" data-correct="false" aria-pressed="false">赶不上</button>
+    </div>
+    <p data-feedback aria-live="polite"></p>
+  </section>
+
+  <h2>网络来回耗时不是全部等待</h2>
+  <p>请求传过去用了 15 ms，数据传回来用了 25 ms，两方向不必相等。光这两段网络耗时就要全部计入；也不能漏掉手机上的处理和排队。在本例中，网络共用 40 ms，重传数据却要到 50 ms 才能收到。</p>
+  <div class="callout">判断是否来得及，要比较“数据预计何时到达”和“留出处理时间后，最晚允许何时到达”。不能只看请求是否发出或数据最终是否收到。</div>
+  <p>如果错过这个声音片段的截止，就不能靠迟到的数据改写已经播出的声音。接收端仍需按情况提供 PLC 等输出。重传还会消耗发送能力，不能无限重发；时间与额外流量的取舍见 <a href="https://www.rfc-editor.org/rfc/rfc4588.html#section-3">RFC 4588 §3</a>、<a href="https://www.rfc-editor.org/rfc/rfc4588.html#section-7">§7</a>。本课只判断当前音频片段能否赶上播放，不推广成所有媒体依赖关系的完整策略。</p>
+
+  <h2>换一个条件，自己判断</h2>
+  <p>网络两段仍是 15 ms 和 25 ms，但<strong>手机上的处理与排队从 10 ms 增至 30 ms</strong>。计划播放仍是 60 ms，接收端仍需 5 ms 处理。</p>
+  <p><strong>重传数据会在什么时候到达？能赶上这次播放吗？为什么网络耗时没变，结果却可能改变？</strong>把判断发回对话；不清楚的地方也可以直接问。</p>
+  <nav>
+    <p><a href="0010-opus-fec.html">下一课：提前发送恢复信息</a></p>
+    <a href="0008-audio-concealment.html">上一课：缺包时生成替代音频</a> · <a href="../reference/0008-retransmission-deadline.html">本课速查卡</a> · <a href="../03-媒体传输/NACK.md">原笔记：NACK</a>
+    <p>原始资料选读：<a href="https://www.rfc-editor.org/rfc/rfc4585.html#section-6.2.1">RFC 4585 §6.2.1</a>，先看 Generic NACK 用于标明缺失包的说明；字段布局留到后面学习。</p>
+  </nav>
+</main></body></html>

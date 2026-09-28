@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>单向端到端延迟耗时表</title>
+  <link rel="stylesheet" href="../assets/rtc-teach.css">
+</head>
+<body><main>
+  <p class="eyebrow">RTC 教学速查 · 延迟</p>
+  <h1>从产生到播放，每一步花了多久</h1>
+  <div class="callout">单向端到端延迟 = 采集与处理 + 发送排队 + 网络传输 + 接收缓冲 + 解码与播放等待。</div>
+  <table><thead><tr><th>位置</th><th>要问什么</th></tr></thead><tbody>
+    <tr><td>发送端</td><td>为凑齐采样、编码或排队发包，等了多久？</td></tr>
+    <tr><td>传输路径</td><td>网络传播、转发与沿途排队，耗了多久？</td></tr>
+    <tr><td>接收端</td><td>重排、接收缓冲、解码和设备输出，又等了多久？</td></tr>
+  </tbody></table>
+  <p><strong>容易混淆：</strong>RTT 是一次往返估计，方向与时间边界都不同，不能直接当作媒体单向端到端延迟。即使 RTT 很小，发送队列和接收缓冲仍可能使通话拖慢。</p>
+  <p><strong>RTT ÷ 2 的前提：</strong>忽略或扣除应答等待后，还需假设两方向耗时相同，才能估计单向网络耗时。例如去程 25 ms、回程 15 ms，往返也是 40 ms，但去程并非 20 ms。即使估计出单向网络耗时，仍不能替代采集到播放的总耗时。方向差异见 <a href="https://www.rfc-editor.org/rfc/rfc7679.html#section-1.1">RFC 7679 §1.1</a>。</p>
+  <p>依据：知识库<a href="../01-基础/端到端延迟.md">《端到端延迟》</a>的分段定义；<a href="https://www.rfc-editor.org/rfc/rfc3550.html#section-6.4.1">RFC 3550 §6.4.1</a>的 RTCP 往返传播时延计算。具体数字必须由明确的起止点和测量方法取得。</p>
+  <nav><a href="../lessons/0005-delay-budget.html">返回第五课</a> · <a href="0001-real-time-tradeoff.html">回看实时取舍</a></nav>
+</main></body></html>

@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>编码码率与发送队列</title>
+  <link rel="stylesheet" href="../assets/rtc-teach.css">
+</head>
+<body><main>
+  <p class="eyebrow">RTC 教学速查 · 调整音频数据量</p>
+  <h1>降低编码码率能改变什么</h1>
+  <p>编码码率表示每秒音频对应的编码数据量；目标码率是给编码器的数据量目标。单位 kbit/s 中，1 kbit = 1000 bit，8 bit = 1 字节。</p>
+  <p>降低码率让同样时长的音频用更少编码数据表示，可能降低声音质量；不等于降低播放速度，也不会自动压小已排队的数据。</p>
+  <h2>比较时要用相同的统计范围</h2>
+  <p>总发送数据不只有编码音频，还可能包括协议头部、控制信息、重传等。Opus 带内 FEC 如果已经包含在 Opus 输出中，不要重复计数。目标码率也不保证每个短时间段的实际输出精确相同。</p>
+  <table>
+    <thead><tr><th>已有积压、不丢弃数据</th><th>队列变化</th></tr></thead>
+    <tbody>
+      <tr><td>总加入量大于实际发出量</td><td>积压增加</td></tr>
+      <tr><td>总加入量等于实际发出量</td><td>积压保持</td></tr>
+      <tr><td>总加入量小于实际发出量</td><td>积压减少，直到清空</td></tr>
+    </tbody>
+  </table>
+  <p>教学例：稳定发送能力 40 kbit/s，编码之外数据固定 8 kbit/s。假定实际平均编码输出等于目标且无突发，Opus 为 32 kbit/s 时总加入 40，已有积压保持；Opus 为 24 时总加入 32，有积压期间每秒减少 8 kbit。</p>
+  <div class="callout">停止积压增长 ≠ 清空已有积压。降低码率可能改善等待，却有声音质量代价，需要观察实际输出与队列。</div>
+  <p>来源：<a href="https://www.rfc-editor.org/rfc/rfc6716.html#section-2.1.1">RFC 6716 §2.1.1</a>（码率与质量）、<a href="https://www.rfc-editor.org/rfc/rfc6716.html#section-2.1.8">§2.1.8</a>（恒定与可变码率）。数值不是默认配置或实测结果。</p>
+  <nav><a href="../lessons/0011-audio-bitrate.html">返回第十一课</a> · <a href="0005-send-queue.html">回看发送队列</a> · <a href="../04-编解码与媒体/Opus.md">原笔记：Opus</a></nav>
+</main></body></html>

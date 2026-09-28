@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>发送队列为什么增长</title>
+  <link rel="stylesheet" href="../assets/rtc-teach.css">
+</head>
+<body><main>
+  <p class="eyebrow">RTC 教学速查 · 发送端排队</p>
+  <h1>新包加入与包发出的速度</h1>
+  <p><strong>发送队列：</strong>已经编码、打包，但还在本机等待发送的数据。Pacing（发送平滑）安排包的发送时刻，避免一批包瞬间集中发出。</p>
+  <div class="callout">剩余包数 = 原先排队的包数 + 新加入的包数 − 实际发走的包数。</div>
+  <p>下面假设所有包大小相同，不丢包，每步最多发走 3 个包；有 3 个就发 3 个，不足则发完。观察每一步结束后的数量：</p>
+  <table><thead><tr><th>每步新来</th><th>已有积压时的变化</th></tr></thead><tbody>
+    <tr><td>4 个包</td><td>每步多排 1 个，队列持续增长</td></tr>
+    <tr><td>3 个包</td><td>数量保持不变，队列不会自行清空</td></tr>
+    <tr><td>2 个包</td><td>每步少排 1 个，直至队列为空</td></tr>
+  </tbody></table>
+  <p><strong>保持数量不等于旧包一直不动：</strong>前面的包在发送，后面的新包在加入。扩大队列容量只让它能存更多数据，不会改变上述加入和发出数量。</p>
+  <p>实际排障应同时看新加入和发出的字节数、队列大小、包的等待时间。包大小不同时，只数包可能误判；本模型也不包含真实系统的优先发送和过期处理策略。</p>
+  <p>依据：<a href="https://webrtc.googlesource.com/src/+/refs/heads/main/modules/pacing/g3doc/index.md">WebRTC 官方《Paced Sending》</a>（Background、Life of a Packet）。数字仅供教学，队列数量关系由本页假设推导。</p>
+  <nav><a href="../lessons/0006-send-queue.html">返回第六课</a> · <a href="0004-one-way-delay-budget.html">回看各环节耗时</a> · <a href="../05-网络质量/Pacing.md">原笔记：Pacing</a></nav>
+</main></body></html>

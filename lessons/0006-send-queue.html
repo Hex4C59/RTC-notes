@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>06 · 包为什么会在发送端排队</title>
+  <link rel="stylesheet" href="../assets/rtc-teach.css">
+  <script src="../assets/rtc-quiz.js" defer></script>
+  <script src="../assets/rtc-queue.js" defer></script>
+</head>
+<body><main>
+  <p class="eyebrow">RTC 入门 · 第六课 · 约 5 分钟</p>
+  <h1>包已经打好，为什么还没发出去？</h1>
+  <p>你用笔记本和朋友视频通话。编码、RTP 打包完成后，程序可能一下子拿到多个包，但它会按安排的时间逐个发出。尚未轮到发送的包暂存在本机内存中，这就是<strong>发送队列</strong>。</p>
+  <p>WebRTC 会把一批包分散到不同时间发送，减小瞬间发送大量数据造成的压力。这种机制称为 Pacing（发送平滑）。本课只学一个判断：<strong>新包加入得比发出得快时，队列会怎样变化？</strong>能解释这一点，才能分析上一课的发送端等待。依据：<a href="https://webrtc.googlesource.com/src/+/refs/heads/main/modules/pacing/g3doc/index.md">WebRTC 官方《Paced Sending》</a>的 Background 与 Life of a Packet。</p>
+
+  <h2>动手改变新包数量</h2>
+  <p>下面是一条流的简化模型：所有包大小相同，先进入队列的先发送，不丢包。<strong>每一步代表 20 ms：先加入新包，再最多发走 3 个。</strong>队列里够 3 个就发 3 个，不够就全部发走。“发走”只表示离开这个发送队列，不代表朋友已经收到。</p>
+  <section class="queue-demo" data-queue-demo data-step-ms="20" data-send-count="3" aria-label="本地发送队列演示">
+    <div class="queue-controls">
+      <label>每步新来
+        <select data-arrivals aria-label="每 20 毫秒新加入的包数">
+          <option value="2">2 个包</option>
+          <option value="3">3 个包</option>
+          <option value="4" selected>4 个包</option>
+        </select>
+      </label>
+      <button type="button" data-step>运行 20 ms</button>
+      <button type="button" data-reset>重新开始</button>
+    </div>
+    <dl class="queue-stats">
+      <div><dt>模拟经过</dt><dd><span data-elapsed>0</span> <small>ms</small></dd></div>
+      <div><dt>队列中等待</dt><dd><span data-queued>0</span> <small>个包</small></dd></div>
+      <div><dt>累计发走</dt><dd><span data-sent-total>0</span> <small>个包</small></dd></div>
+    </dl>
+    <p class="queue-caption">当前等待发送的包，左边先发送：</p>
+    <ol class="queue-packets" data-packets aria-label="当前等待发送的包"><li class="queue-empty">队列为空</li></ol>
+    <p data-step-result role="status">先运行几步，看看剩下的包会不会越来越多。</p>
+    <noscript><p>启用 JavaScript 后可操作演示。也可以直接阅读下方的数量关系和练习。</p></noscript>
+  </section>
+  <ol class="queue-instructions">
+    <li>保持每步新来 4 个包，点击“运行 20 ms”三次。</li>
+    <li>改为每步新来 3 个包，再运行两次，观察队列能否变短。</li>
+    <li>改为每步新来 2 个包，再运行三次，观察队列能否回到空。</li>
+  </ol>
+  <p class="queue-caption">20 ms、4 个和 3 个都是教学设定，不是 WebRTC 默认参数。真实系统还会考虑包的字节数、等待时间，并调整发送安排。</p>
+
+  <h2>队列为什么这样变化？</h2>
+  <p>这一轮剩下的包 = 原先排队的包 + 新加入的包 − 实际发走的包。每步加入 4 个、发走 3 个，就会多留下 1 个。持续这样，后来的包前面排着越来越多的包，等到发送的时间通常也会变长。</p>
+  <div class="callout">每步新来 3 个、发走 3 个时，已有的队列长度保持不变。旧包仍会陆续发出，同时又有新包排到后面。要在这个模型中把队列变短，新加入的数量需要小于实际发出的数量。</div>
+  <section class="quiz" data-quiz data-right="对，仍有 6 个包等待。每步发走 3 个，又加入 3 个；旧包会发出，但等待的包总数没有减少。" data-wrong="比较每一步的变化：原来有 6 个，新来 3 个，发走 3 个，剩下的仍是 6 个。">
+    <p><strong>试着判断：</strong>已经有 6 个包排队，之后每步新来 3 个、发走 3 个。运行几步后，等待的包数会怎样？</p>
+    <div class="quiz-options">
+      <button type="button" data-correct="false" aria-pressed="false">清空</button>
+      <button type="button" data-correct="true" aria-pressed="false">保持</button>
+      <button type="button" data-correct="false" aria-pressed="false">增长</button>
+    </div>
+    <p data-feedback aria-live="polite"></p>
+  </section>
+
+  <h2>用自己的话解释</h2>
+  <p>新包仍然每步来 4 个，最多发走 3 个。有人建议把队列容量扩大一倍，让它能存更多包。<strong>这样能解决等待越来越久的问题吗？为什么？</strong>请把理由发回对话；不清楚的地方也可以直接问。</p>
+  <nav>
+    <p><a href="0007-receive-buffer.html">下一课：接收端为什么等一会儿再播放</a></p>
+    <a href="0005-delay-budget.html">上一课：声音慢在哪里</a> · <a href="../reference/0005-send-queue.html">本课速查卡</a> · <a href="../05-网络质量/Pacing.md">原笔记：Pacing</a>
+    <p>原始资料选读：<a href="https://webrtc.googlesource.com/src/+/refs/heads/main/modules/pacing/g3doc/index.md">WebRTC 官方《Paced Sending》</a>，先看 Background 和 Life of a Packet；源码接口和调度细节以后再学。</p>
+  </nav>
+</main></body></html>

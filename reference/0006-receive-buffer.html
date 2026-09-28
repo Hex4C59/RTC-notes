@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>接收端缓冲：等待与连续播放</title>
+  <link rel="stylesheet" href="../assets/rtc-teach.css">
+</head>
+<body><main>
+  <p class="eyebrow">RTC 教学速查 · 接收端缓冲</p>
+  <h1>接收端为什么暂存音频包</h1>
+  <p>网络使音频包的到达间隔发生变化，但声音需要按原有时间顺序连续播放。抖动缓冲（Jitter Buffer）在接收端暂存包，配合播放安排，为稍晚到达的包留出时间。</p>
+  <table>
+    <thead><tr><th>位置</th><th>等待的对象与原因</th></tr></thead>
+    <tbody>
+      <tr><td>发送端队列</td><td>已编码、打包的数据等待本机安排发送。</td></tr>
+      <tr><td>接收端缓冲</td><td>已收到的数据等待按媒体时间安排解码、播放。</td></tr>
+    </tbody>
+  </table>
+  <h2>固定播放安排的例子</h2>
+  <p>三个连续包各含 20 ms 音频。以第一个包到达为 0 ms，它们在 0、35、40 ms 到达。忽略解码和输出耗时：</p>
+  <ul>
+    <li>计划在 10、30、50 ms 开始播放：第二个包赶不上。</li>
+    <li>计划在 30、50、70 ms 开始播放：三个包都赶得上，但声音都晚了 20 ms。</li>
+  </ul>
+  <div class="callout">增加等待时间，可以让部分原本来不及的包赶上播放；代价是增加延迟。它不会加速网络，不能找回永久丢失的数据，也不能保证未来不再迟到。</div>
+  <p>等待时间不等于内存容量，也不代表每个包收到后都等待同样长的时间。真实播放截止还要考虑解码和设备输出余量；实际系统可以调整缓冲目标，本例不是默认配置或完整实现。</p>
+  <p>依据：<a href="https://www.rfc-editor.org/rfc/rfc3550.html#section-2.1">RFC 3550 §2.1</a>（网络延迟变化与音频播放时序重建）。</p>
+  <nav><a href="../lessons/0007-receive-buffer.html">返回第七课</a> · <a href="0005-send-queue.html">回看发送端队列</a> · <a href="../03-媒体传输/抖动缓冲.md">原笔记：抖动缓冲</a></nav>
+</main></body></html>

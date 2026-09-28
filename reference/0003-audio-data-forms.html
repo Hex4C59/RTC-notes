@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>音频链路的三种数据形态</title>
+  <link rel="stylesheet" href="../assets/rtc-teach.css">
+</head>
+<body><main>
+  <p class="eyebrow">RTC 教学速查 · 音频</p>
+  <h1>PCM → Opus packet → RTP 包</h1>
+  <table><thead><tr><th>位置</th><th>手里的数据</th><th>这一步做什么</th></tr></thead><tbody>
+    <tr><td>采集 / 预处理后</td><td>PCM 采样块</td><td>保存随时间变化的数字声音样本，尚未压缩成 Opus</td></tr>
+    <tr><td>Opus 编码后</td><td>Opus packet</td><td>得到压缩音频数据；packet 是编解码格式的名称，尚无 RTP 头</td></tr>
+    <tr><td>RTP 打包后</td><td>RTP 包</td><td>把完整 Opus packet 放入 RTP payload，并加入序列号、时间戳等头字段</td></tr>
+  </tbody></table>
+  <div class="callout">判断故障位置：内容听起来失真，先查采集、处理与编码；序号不连续，先查打包后的发送与接收路径。单一现象不能直接证明根因。</div>
+  <p>边界：这里说的是 <a href="https://www.rfc-editor.org/rfc/rfc7587.html#section-4">RFC 7587 §4</a> 定义的 Opus RTP 负载格式。一个 Opus packet 可含多个 Opus frame；一个 RTP payload 恰好承载一个完整 Opus packet。RTP 包之后还可能经过 SRTP、UDP、IP 等处理。</p>
+  <nav><a href="../lessons/0004-encode-then-packetize.html">返回第四课</a> · <a href="../01-基础/实时媒体链路.md">知识库：实时媒体链路</a></nav>
+</main></body></html>

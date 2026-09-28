@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>05 · 声音慢在哪里</title>
+  <link rel="stylesheet" href="../assets/rtc-teach.css">
+  <script src="../assets/rtc-quiz.js" defer></script>
+</head>
+<body><main>
+  <p class="eyebrow">RTC 入门 · 约 5 分钟</p>
+  <h1>声音慢了，真的都是网络的事吗？</h1>
+  <p>声音从 PCM 变成 Opus packet，再变成 RTP 包。现在追踪同一小段声音：从朋友手机采集完成，到你的扬声器播出，中间每处等待都会相加。</p>
+  <h2>把每段耗时列出来</h2>
+  <p>下面数字只是练习设定，不代表产品默认值或真实测量。起点是朋友手机完成这段声音的采集，终点是你听到它；每段互不重叠。</p>
+  <table><thead><tr><th>经过的位置</th><th>耗时</th></tr></thead><tbody>
+    <tr><td>采集后处理与编码</td><td>30 ms</td></tr>
+    <tr><td>发送端队列等待</td><td>80 ms</td></tr>
+    <tr><td>单向网络传输</td><td>25 ms</td></tr>
+    <tr><td>接收端缓冲等待</td><td>70 ms</td></tr>
+    <tr><td>解码与扬声器输出</td><td>15 ms</td></tr>
+  </tbody></table>
+  <p>把这些段相加，才得到本例从所定起点到终点的单向总耗时。这里的“网络 25 ms”并不包含本机发送队列，也不包含对端为平稳播放而设置的缓冲。</p>
+  <section class="quiz" data-quiz data-right="对。30 + 80 + 25 + 70 + 15 = 220 ms。" data-wrong="要把五段都计入：30 + 80 + 25 + 70 + 15。">
+    <p><strong>算一算：</strong>这段声音的单向总耗时是多少？</p>
+    <div class="quiz-options"><button type="button" data-correct="true" aria-pressed="false">220 ms</button><button type="button" data-correct="false" aria-pressed="false">120 ms</button></div>
+    <p data-feedback aria-live="polite"></p>
+  </section>
+  <p>工程上还可能有采集缓冲、加密、SFU 转发、同步等待等细分段。实际测量须先定义起止点，避免把排队时间漏掉或重复相加。知识库<a href="../01-基础/端到端延迟.md">《端到端延迟》</a>提供完整拆解。</p>
+  <h2>RTT 看起来不错，为什么人仍觉得慢？</h2>
+  <p>RTT 描述一次往返时延；它不是这段声音从采集到播出的单向总耗时。RTCP 的往返估算见 <a href="https://www.rfc-editor.org/rfc/rfc3550.html#section-6.4.1">RFC 3550 §6.4.1</a>。本例即使测得 RTT 为 40 ms，也不能抹去发送端 80 ms 的队列等待和接收端 70 ms 的缓冲等待。</p>
+  <h2>RTT 除以 2，得到的是什么？</h2>
+  <p>假设手机 A 发探测包给电脑 B，B 立即回复，忽略应答处理时间：A 到 B 花 25 ms，B 回 A 花 15 ms，往返就是 40 ms。此时 A 到 B 实际花了 25 ms；40 ÷ 2 得到的 20 ms 只是两个方向的平均。</p>
+  <p>只有假设两个方向耗时相同，并忽略或扣除应答等待，才可用 RTT ÷ 2 估计单向网络耗时。两个方向可能走不同路径，也可能排队时间不同，见 <a href="https://www.rfc-editor.org/rfc/rfc7679.html#section-1.1">RFC 7679 §1.1</a>。</p>
+  <div class="callout">即使单向网络耗时确实为 20 ms，声音仍要经过编码、排队、接收缓冲和解码播放。20 ms 不能直接当作从采集到播放的总耗时。前面给定的五段耗时仍合计 220 ms。</div>
+  <section class="quiz" data-quiz data-right="对。RTT 很小，媒体链路上的排队和缓冲仍可能很大。" data-wrong="RTT 不覆盖这里全部五段等待；看发送队列和接收缓冲。">
+    <p><strong>判断：</strong>若 RTT 很小，媒体单向总耗时也一定很小吗？</p>
+    <div class="quiz-options"><button type="button" data-correct="false" aria-pressed="false">一定</button><button type="button" data-correct="true" aria-pressed="false">未必</button></div>
+    <p data-feedback aria-live="polite"></p>
+  </section>
+  <h2>发给老师的短答</h2>
+  <p>看上面的耗时表：除了网络传输，哪两处等待最久？如果只看网络传输的 25 ms，会漏掉哪些等待？请用 2—3 句回答。任何地方不清楚都可以追问。</p>
+  <p><strong>再算两段：</strong>另一个简化场景中，已知单向网络耗时为 20 ms，包到达后在接收缓冲里额外等待 70 ms，其余耗时忽略。从包发出到离开接收缓冲，一共经过多少毫秒？</p>
+  <nav><a href="0004-encode-then-packetize.html">上一课</a> · <a href="0006-send-queue.html">下一课：发送端排队</a> · <a href="../reference/0004-one-way-delay-budget.html">本课速查卡</a> · <a href="../01-基础/端到端延迟.md">原笔记：端到端延迟</a><p>推荐先读原笔记的“初读”部分；<a href="https://www.rfc-editor.org/rfc/rfc3550.html#section-6.4.1">RFC 3550 §6.4.1</a>只需确认 RTT 的测量边界。</p></nav>
+</main></body></html>

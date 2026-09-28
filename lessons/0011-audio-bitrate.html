@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>11 · 发送能力不足时降低编码码率</title>
+  <link rel="stylesheet" href="../assets/rtc-teach.css">
+  <script src="../assets/rtc-quiz.js" defer></script>
+</head>
+<body><main>
+  <p class="eyebrow">RTC 入门 · 第十一课 · 约 4 分钟</p>
+  <h1>发不完时，让编码器少产生一些数据</h1>
+  <p>你用手机与朋友语音通话，网络可用的发送能力下降了。手机仍不断采集你的声音，如果编码器继续产生原来那么多数据，发送队列就可能越积越长。扩大队列不能解决这个问题；一种办法是降低音频的<strong>目标编码码率</strong>。</p>
+
+  <h2>码率说的是每秒多少数据</h2>
+  <p><strong>编码码率</strong>表示每秒音频对应的编码数据量，常用 kbit/s 表示。本课 1 kbit = 1000 bit，8 bit = 1 字节。例如 32 kbit/s 对应平均每秒 4000 字节的编码数据。这里不包含 RTP 等传输头部。</p>
+  <p>目标编码码率是给编码器的数据量目标。降低它，是让相同时长的声音用更少编码数据表示；<strong>不是少采集几秒，也不是让对方把声音播放得更慢</strong>。Opus 可以调整码率，但减少数据量可能降低声音质量。依据：<a href="https://www.rfc-editor.org/rfc/rfc6716.html#section-2.1.1">RFC 6716 §2.1.1</a>。</p>
+  <p>以每包包含 20 ms 音频为例，32 kbit/s 平均对应每包 80 字节，24 kbit/s 则平均为 60 字节。包所代表的声音时长仍是 20 ms。<strong>这是平均值，不代表每包都一样大</strong>；目标值也不保证实际输出在每个短时间段都精确相等。参见 <a href="https://www.rfc-editor.org/rfc/rfc6716.html#section-2.1.8">RFC 6716 §2.1.8</a>。</p>
+
+  <h2>先给编码之外的数据留出空间</h2>
+  <p>为了单独理解数据量关系，假设一条音频流的可用总发送能力稳定为 <strong>40 kbit/s</strong>，传输头部、控制信息等编码之外的数据固定占 <strong>8 kbit/s</strong>。这个 8 是教学设定，不是实际通话的固定开销。</p>
+  <p>本例把 Opus 输出的全部数据算进编码码率，<strong>其中如果含有 Opus 带内 FEC，就已经计入，不能再加一遍</strong>。暂不考虑重传、数据丢弃或额外突发，并假定调整后实际平均编码输出等于目标。</p>
+  <table>
+    <caption>已有积压时，比较每秒新加入和实际能发出的数据量</caption>
+    <thead><tr><th scope="col">Opus 输出</th><th scope="col">总加入量</th><th scope="col">队列变化</th></tr></thead>
+    <tbody>
+      <tr><td>48 kbit/s</td><td>48 + 8 = 56 kbit/s</td><td>每秒多积压 16 kbit</td></tr>
+      <tr><td>32 kbit/s</td><td>32 + 8 = 40 kbit/s</td><td>已有积压保持</td></tr>
+      <tr><td>24 kbit/s</td><td>24 + 8 = 32 kbit/s</td><td>每秒减少 8 kbit，直到清空</td></tr>
+    </tbody>
+  </table>
+  <p>这里用连续、均匀的数据流作简化：有积压时按 40 kbit/s 发送，清空后只发送实际可用的数据。真实网络按包发送，短时间内会波动；不能把这个模型当作精确的发包时序。</p>
+  <section class="quiz" data-quiz data-right="对，总加入量为 40 kbit/s，与实际发出量相等。旧数据会发送，但新数据持续补入，已有积压不会因此减少。" data-wrong="32 kbit/s 只是 Opus 数据，加上其他 8 kbit/s 后，总加入量为 40 kbit/s，恰好等于发送能力，因此已有积压保持。">
+    <p><strong>已经有数据排队：</strong>按本例假设，将 Opus 输出降到 32 kbit/s 后，已有积压会怎样？</p>
+    <div class="quiz-options">
+      <button type="button" data-correct="false" aria-pressed="false">逐步减少</button>
+      <button type="button" data-correct="true" aria-pressed="false">保持不变</button>
+      <button type="button" data-correct="false" aria-pressed="false">继续增加</button>
+    </div>
+    <p data-feedback aria-live="polite"></p>
+  </section>
+
+  <h2>停止增长，不等于已经清空</h2>
+  <div class="callout">总加入量等于实际发出量，只能停止增加积压。要在不丢弃数据的模型里减少已有积压，需要暂时让总加入量小于实际发出量。</div>
+  <p>降低编码目标不会把已经排队的旧包自动压小，也不会立刻消除之前积累的等待。代价则是新编码音频可能失去一些声音细节；目标是兼顾可理解的声音和及时交互，不是把码率降得越低越好。</p>
+  <p>实际可用发送能力并不是预先知道的常数，系统需要根据反馈估计，并观察调整后的队列与音质。本课先学习“已知能力不足，怎样调整数据量”；能力如何估计留到后续。相关原笔记：<a href="../05-网络质量/拥塞控制.md">拥塞控制</a>。</p>
+
+  <h2>用自己的话解释</h2>
+  <p><strong>为什么降到 32 kbit/s 仍不能清掉已有积压，而降到 24 kbit/s 可以逐步减少积压？降低编码码率可能付出什么声音质量上的代价？</strong>按上面的固定假设回答即可；不清楚的地方可以直接问。</p>
+  <nav>
+    <a href="0010-opus-fec.html">上一课：Opus 带内 FEC</a> · <a href="../reference/0010-audio-bitrate.html">本课速查卡</a> · <a href="../04-编解码与媒体/Opus.md">原笔记：Opus</a>
+    <p>原始资料选读：<a href="https://www.rfc-editor.org/rfc/rfc6716.html#section-2.1.1">RFC 6716 §2.1.1</a>，先理解码率与质量的关系；本课 40、8、32、24 kbit/s 是教学选择，不是推荐配置。</p>
+  </nav>
+</main></body></html>

@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>04 · 编码与打包不是一步</title>
+  <link rel="stylesheet" href="../assets/rtc-teach.css">
+  <script src="../assets/rtc-quiz.js" defer></script>
+</head>
+<body><main>
+  <p class="eyebrow">RTC 入门 · 约 5 分钟</p>
+  <h1>压缩后的声音，已经是 RTP 包了吗？</h1>
+  <p>序列号可用于识别接收端的缺口。现在回到发送端：朋友对着手机说话，声音进入程序后，要经过两次不同的变形，才成为带序列号的 RTP 包。</p>
+  <h2>从声音样本到可识别的媒体包</h2>
+  <p>麦克风采集并经可能的预处理后，程序持有 <strong>PCM 采样块</strong>。Opus 编码器把 PCM 压缩为 <strong>Opus packet</strong>。这里的 packet 是编码格式中的名字，里面没有 RTP 序列号。</p>
+  <div class="packet-flow" aria-label="PCM 经编码成为 Opus packet，再经 RTP 打包成为 RTP 包"><span>PCM</span><span>→ 编码 →</span><span>Opus packet</span><span>→ 打包 →</span><span>RTP 包</span></div>
+  <p>RTP 打包器再把完整 Opus packet 放入 payload，加入序列号、时间戳等 RTP 头字段。接收端才能用这些字段识别包的顺序与媒体时间位置。按 Opus 的 RTP 负载规范，一个 RTP payload 恰好包含一个完整 Opus packet；一个 Opus packet 内部仍可能包含多个 Opus frame。依据：<a href="https://www.rfc-editor.org/rfc/rfc7587.html#section-4">RFC 7587 §4</a>。</p>
+  <section class="quiz" data-quiz data-right="对。编码器把 PCM 变成 Opus 压缩数据。" data-wrong="PCM 还没有压缩成 Opus；负责这一步的是音频编码器。">
+    <p><strong>第一步：</strong>谁把 PCM 变成 Opus packet？</p>
+    <div class="quiz-options"><button type="button" data-correct="true" aria-pressed="false">编码器</button><button type="button" data-correct="false" aria-pressed="false">打包器</button></div>
+    <p data-feedback aria-live="polite"></p>
+  </section>
+  <section class="quiz" data-quiz data-right="对。打包器把 Opus packet 放入 RTP payload，并加入 RTP 头。" data-wrong="Opus 数据已经编码好；要加 RTP 头，应交给打包器。">
+    <p><strong>第二步：</strong>谁给压缩数据加上 RTP 序列号？</p>
+    <div class="quiz-options"><button type="button" data-correct="false" aria-pressed="false">编码器</button><button type="button" data-correct="true" aria-pressed="false">打包器</button></div>
+    <p data-feedback aria-live="polite"></p>
+  </section>
+  <h2>发给老师的短答</h2>
+  <p>有人说：“Opus 编码器输出的 packet 已经带 RTP 序列号，可以直接当 RTP 包发。”这句话哪里不对？请沿着 PCM → Opus packet → RTP 包，说明序列号从哪一步才出现。写 2—3 句即可。</p>
+  <p>把答案发回对话；有不清楚的地方也请直接追问。读完本页不自动算作掌握。</p>
+  <nav><a href="0003-sequence-gap.html">上一课</a> · <a href="../reference/0003-audio-data-forms.html">本课速查卡</a> · <a href="../01-基础/实时媒体链路.md">原笔记：实时媒体链路</a><p>推荐选读：<a href="https://www.rfc-editor.org/rfc/rfc7587.html#section-4">RFC 7587 §4</a> 开头关于 Opus packet 与 RTP payload 的一段。</p></nav>
+</main></body></html>

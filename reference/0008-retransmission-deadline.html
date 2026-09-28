@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>请求重传与播放截止</title>
+  <link rel="stylesheet" href="../assets/rtc-teach.css">
+</head>
+<body><main>
+  <p class="eyebrow">RTC 教学速查 · 请求重传</p>
+  <h1>重传的数据能否赶上播放</h1>
+  <p>NACK（Negative Acknowledgement，否定确认）是接收端通过 RTCP 发送的缺包反馈，标明缺少的 RTP 序号。RTCP 用于传递控制信息；此处的 NACK 本身不携带缺失音频。</p>
+  <p>在双方支持相应重传的前提下，发送端检查缓存与发送条件，可能把原包对应的数据重新发来。请求、成功收到数据、赶上播放，是三个不同的结果。</p>
+  <table>
+    <thead><tr><th>方式</th><th>音频或数据从哪里来</th></tr></thead>
+    <tbody>
+      <tr><td>PLC</td><td>接收端根据已有信号估计并生成替代音频。</td></tr>
+      <tr><td>重传</td><td>发送端重新发送保存的编码数据；需要额外传输时间与发送能力。</td></tr>
+    </tbody>
+  </table>
+  <h2>估算一次重传的时间</h2>
+  <p>预计到达时刻 = 请求发出时刻 + 请求传输耗时 + 发送端处理与排队耗时 + 重传数据返回耗时。</p>
+  <p>最晚到达时刻 = 计划播放时刻 − 接收端所需处理时间。比较这两个时刻；实际网络还存在估计误差，时间上看似来得及也不保证成功。</p>
+  <div class="callout">两个方向的耗时都要计入，不要求相等。网络之外的排队也会影响重传能否赶上。</div>
+  <p>例：请求在 0 ms 发出，三个环节耗时 15、10、25 ms，到达时刻为 50 ms。计划 60 ms 播放，处理需 5 ms，最晚到达为 55 ms，因此按固定假设能赶上。若中间耗时增至 30 ms，则到达为 70 ms，赶不上。数字为教学设定。</p>
+  <p>原包可能仍在途中；发送端也可能没有缓存。不要把缺口当成永久丢失，或把发出 NACK 当成恢复成功。此处判断的是当前音频片段的播放，不概括所有视频参考依赖的处理。</p>
+  <p>来源：<a href="https://www.rfc-editor.org/rfc/rfc4585.html#section-6.2.1">RFC 4585 §6.2.1</a>（缺包反馈）；<a href="https://www.rfc-editor.org/rfc/rfc4588.html#section-3">RFC 4588 §3</a>（时间取舍）与 <a href="https://www.rfc-editor.org/rfc/rfc4588.html#section-7">§7</a>（额外流量）。</p>
+  <nav><a href="../lessons/0009-retransmission-deadline.html">返回第九课</a> · <a href="0007-audio-concealment.html">回看 PLC</a> · <a href="../03-媒体传输/NACK.md">原笔记：NACK</a></nav>
+</main></body></html>

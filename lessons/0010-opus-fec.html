@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>10 · 提前发送恢复信息</title>
+  <link rel="stylesheet" href="../assets/rtc-teach.css">
+  <script src="../assets/rtc-quiz.js" defer></script>
+</head>
+<body><main>
+  <p class="eyebrow">RTC 入门 · 第十课 · 约 4 分钟</p>
+  <h1>缺包后，不请求重传也能恢复吗？</h1>
+  <p>朋友的手机正在给你的电脑发送语音。为了应对丢包，手机可以在发送后续声音时，额外带上一份用于恢复前面声音的信息。这样，前面的包丢了，电脑还有机会利用后面的包恢复那段音频。</p>
+  <p>这种提前发送恢复信息的办法属于 <strong>FEC（Forward Error Correction，前向纠错）</strong>。本课只看 <strong>Opus 带内 FEC</strong>：“带内”指恢复信息放在 Opus 编码数据中，随媒体包一起发送。依据：<a href="https://www.rfc-editor.org/rfc/rfc7587.html#section-3.3">RFC 7587 §3.3</a>。</p>
+
+  <h2>302 除了自己的声音，还带了什么？</h2>
+  <p>假设使用支持该机制的 Opus 语音模式，接收端支持使用 FEC；每包对应 20 ms 音频，编码器这次确实为 301 生成了恢复信息。下面的编号是 RTP 序号，仍由 RTP 打包器添加。</p>
+  <table>
+    <thead><tr><th scope="col">RTP 包</th><th scope="col">其中的 Opus 数据</th><th scope="col">结果</th></tr></thead>
+    <tbody>
+      <tr><th scope="row">301</th><td>301 对应的正常音频编码</td><td>丢失</td></tr>
+      <tr><th scope="row">302</th><td>302 的正常音频编码，以及用于恢复 301 音频的额外信息</td><td>及时到达</td></tr>
+    </tbody>
+  </table>
+  <p>电脑可以让 Opus 解码器利用 302 中的 FEC 信息，解码出 301 对应时间段的音频，再处理 302 自己的声音。<strong>不需要先通知手机“301 丢了”，再等手机重发。</strong>但必须等到带有恢复信息的 302 到达。</p>
+  <div class="callout">这里有发送端提供的、针对缺失音频的恢复信息。PLC 则是在没有这份可用信息时，根据已有声音估计替代输出。</div>
+  <p>Opus 的这种 FEC 可以把较低码率的再次编码结果放入后续包；它不保证逐字节找回原来的 RTP 包，也不保证与正常解码完全相同。不同 FEC 方案的恢复方式不同，本例不能代表全部 FEC。依据：<a href="https://www.rfc-editor.org/rfc/rfc6716.html#section-2.1.7">RFC 6716 §2.1.7</a>。</p>
+
+  <h2>不用等重传，也要赶上播放</h2>
+  <p>用接收端同一个时钟计时：把本次观察开始记为 0 ms，301 对应的声音计划在 60 ms 开始播放，恢复、解码等处理共需 5 ms。若 302 在 45 ms 到达，处理到 50 ms 就准备好了，能赶上。这些耗时仅供教学，不是默认参数。</p>
+  <section class="quiz" data-quiz data-right="对，302 到 65 ms 才到，已经晚于 301 对应声音的 60 ms 播放时刻；有恢复信息也赶不上这次播放。" data-wrong="恢复信息必须及时可用。302 在 65 ms 才到，即使不计处理耗时，也已经错过 60 ms 的播放时刻。">
+    <p><strong>只改变到达时间：</strong>如果 302 到 65 ms 才到，其中的 FEC 信息还能赶上 301 在 60 ms 的计划播放吗？</p>
+    <div class="quiz-options">
+      <button type="button" data-correct="false" aria-pressed="false">赶得上</button>
+      <button type="button" data-correct="true" aria-pressed="false">赶不上</button>
+    </div>
+    <p data-feedback aria-live="polite"></p>
+  </section>
+
+  <h2>恢复信息不是免费的</h2>
+  <p>额外信息也占用传输数据量。如果正常音频的数据量保持不变，总发送量就会增加；如果总发送量被限制，就需要给恢复信息分配其中一部分。还可能需要多留一些播放前的等待时间，才能等到后续包。</p>
+  <p>启用 FEC 不代表每个包都带恢复信息，编码器会根据条件决定是否加入。如果 302 没带 301 的恢复信息，或者 302 也丢了，本例这条恢复途径就不可用。因此，FEC 也不能保证所有丢包都能恢复。<a href="https://www.rfc-editor.org/rfc/rfc7587.html#section-3.3">RFC 7587 §3.3</a>说明了编码器的选择条件及额外网络资源开销。</p>
+
+  <h2>用自己的话解释</h2>
+  <p><strong>301 丢了，302 带着有效的恢复信息及时到达。电脑能恢复 301 对应的音频，是因为它像 PLC 一样只根据此前声音估计，还是因为发送端提前提供了什么？为什么不必等一次重传？</strong>把理由发回对话；不清楚的用词也可以直接问。</p>
+  <nav>
+    <p><a href="0011-audio-bitrate.html">下一课：发送能力不足时降低编码码率</a></p>
+    <a href="0009-retransmission-deadline.html">上一课：请求重传</a> · <a href="../reference/0009-opus-fec.html">本课速查卡</a> · <a href="../03-媒体传输/FEC.md">原笔记：FEC</a>
+    <p>原始资料选读：<a href="https://www.rfc-editor.org/rfc/rfc7587.html#section-3.3">RFC 7587 §3.3</a>，重点看当前包携带前一包恢复信息、接收端利用下一包解码的两段。原笔记还介绍其他 FEC 形式，可留待后读。</p>
+  </nav>
+</main></body></html>

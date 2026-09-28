@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Opus 带内 FEC 与重传、PLC</title>
+  <link rel="stylesheet" href="../assets/rtc-teach.css">
+</head>
+<body><main>
+  <p class="eyebrow">RTC 教学速查 · 提前发送恢复信息</p>
+  <h1>Opus 带内 FEC</h1>
+  <p>FEC（Forward Error Correction，前向纠错）提前发送额外恢复信息。Opus 带内 FEC 将前面音频的恢复信息放在后续 Opus 编码数据中；“带内”指随媒体数据发送。</p>
+  <table>
+    <thead><tr><th>方法</th><th>缺失时利用什么</th></tr></thead>
+    <tbody>
+      <tr><td>PLC</td><td>根据已有声音估计替代音频。</td></tr>
+      <tr><td>请求重传</td><td>发送端保留的数据，经请求后再次传回。</td></tr>
+      <tr><td>Opus 带内 FEC</td><td>后续包中提前带来的、针对缺失音频的恢复信息。</td></tr>
+    </tbody>
+  </table>
+  <h2>301 丢失、302 恢复它的条件</h2>
+  <ul>
+    <li>编码器实际在 302 中加入了可用于恢复 301 音频的信息。</li>
+    <li>接收端支持使用这份信息。</li>
+    <li>302 及时到达，留够恢复、解码和输出所需时间。</li>
+  </ul>
+  <div class="callout">不用先请求重传，不等于不用等待后续包，更不等于保证恢复成功。</div>
+  <p>代价：恢复信息占用发送的数据量，也可能需要更多播放前等待。总发送量固定时，它会占用其中一部分。开启功能不保证每包都有恢复信息。</p>
+  <p>边界：这里是 Opus 语音模式的带内 FEC 示例，可使用较低码率的再次编码信息；不保证逐字节恢复原 RTP 包，也不保证与正常解码完全相同。其他 FEC 方案可能有不同的恢复能力。</p>
+  <p>来源：<a href="https://www.rfc-editor.org/rfc/rfc7587.html#section-3.3">RFC 7587 §3.3</a>、<a href="https://www.rfc-editor.org/rfc/rfc6716.html#section-2.1.7">RFC 6716 §2.1.7</a>。</p>
+  <nav><a href="../lessons/0010-opus-fec.html">返回第十课</a> · <a href="0008-retransmission-deadline.html">回看重传</a> · <a href="../03-媒体传输/FEC.md">原笔记：FEC</a></nav>
+</main></body></html>

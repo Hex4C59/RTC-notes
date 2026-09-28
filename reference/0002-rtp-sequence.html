@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>RTP 序列号：缺口与边界</title>
+  <link rel="stylesheet" href="../assets/rtc-teach.css">
+</head>
+<body><main>
+  <p class="eyebrow">RTC 教学速查 · RTP</p>
+  <h1>看见缺口，先别断言丢包</h1>
+  <p>同一 RTP 流中，发送端每发送一个 RTP 数据包，序列号递增 1。接收端用它识别当前收到的包之间有无缺口，或是否发生乱序。</p>
+  <div class="packet-flow" aria-label="已收到序列号 100、101、103，102 暂时缺席"><span>100</span><span>101</span><span class="gap">102 ?</span><span>103</span></div>
+  <table><thead><tr><th>观察</th><th>能说什么</th><th>还不能说什么</th></tr></thead><tbody>
+    <tr><td>收到 100、101、103</td><td>当前观察到 102 的缺口</td><td>102 一定永久丢失</td></tr>
+    <tr><td>稍后收到 102</td><td>102 发生了乱序或晚到</td><td>102 一定赶上了播放</td></tr>
+    <tr><td>播放截止时仍缺 102</td><td>这次播放无法使用 102</td><td>它一定是在网络中丢失</td></tr>
+  </tbody></table>
+  <p><strong>别混淆：</strong>序列号表示包的先后；RTP 时间戳表示媒体时间位置；本地到达时刻是第三种时间。跨流比较序列号没有意义，序列号回绕也需要处理。</p>
+  <p>依据：<a href="https://www.rfc-editor.org/rfc/rfc3550.html#section-5.1">RFC 3550 §5.1</a>。最后一行的播放判断还依赖应用的缓冲与截止策略，不能只凭 RTP 报头决定。</p>
+  <nav><a href="../lessons/0003-sequence-gap.html">返回第三课</a> · <a href="../03-媒体传输/RTP.md">知识库：RTP</a></nav>
+</main></body></html>

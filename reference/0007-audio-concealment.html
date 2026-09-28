@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>PLC：缺包时生成替代音频</title>
+  <link rel="stylesheet" href="../assets/rtc-teach.css">
+</head>
+<body><main>
+  <p class="eyebrow">RTC 教学速查 · 缺包时的音频输出</p>
+  <h1>PLC：生成替代音频</h1>
+  <p>PLC（Packet Loss Concealment，丢包隐藏）在缺少可用音频数据时，根据已有信号生成替代输出，尽量减轻缺包造成的听感影响。Opus 标准把它描述为解码侧功能，允许不同实现。</p>
+  <table>
+    <thead><tr><th>需要区分</th><th>含义</th></tr></thead>
+    <tbody>
+      <tr><td>正常解码</td><td>利用及时可用的编码数据，解码出对应音频。</td></tr>
+      <tr><td>PLC 输出</td><td>缺少对应数据时生成替代音频，不保证与正常解码结果一致。</td></tr>
+      <tr><td>网络收包</td><td>PLC 本身没有接收或重传原包，不能据此认定原包按时到达。</td></tr>
+    </tbody>
+  </table>
+  <h2>一个固定时序例子</h2>
+  <p>某包对应的声音计划在 50–70 ms 播放，包到 90 ms 才到。若没有及时可用的恢复数据，可用 PLC 为 50–70 ms 提供替代音频；后续正常包按既定安排处理。忽略处理耗时，仅用于理解机制。</p>
+  <div class="callout">声音持续输出 ≠ 原包已经收到 ≠ 缺失内容被准确还原。</div>
+  <p>已经播放的声音不能由迟到包改写。PLC 的效果取决于已有信号、缺失持续时间与实现；不保证完全听不出问题。</p>
+  <p>来源：<a href="https://www.rfc-editor.org/rfc/rfc6716.html#section-4.4">RFC 6716 §4.4</a>。本卡讨论基本机制，不把标准中的参考算法当作所有当前实现。</p>
+  <nav><a href="../lessons/0008-audio-concealment.html">返回第八课</a> · <a href="0006-receive-buffer.html">回看接收端缓冲</a> · <a href="../07-客户端/NetEQ.md">原笔记：NetEQ</a></nav>
+</main></body></html>
