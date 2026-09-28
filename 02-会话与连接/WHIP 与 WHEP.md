@@ -9,8 +9,8 @@ status: stable
 
 > [!tip] 阅读提示
 > **前置：** [[Offer Answer]]、[[SDP]]、[[ICE]]、[[DTLS]]、[[SRTP]]。
-> **初读：** 先看“实际场景与角色”“两个 URL、两条平面”“WHIP 主流程”，回答：为什么 HTTP `201` 还不代表已经有媒体？
-> **深入：** 实现接入时重点看 Trickle ICE、ICE restart、会话状态机、安全与故障注入；WHEP 行为必须核对草案版本。
+> **初读：** 读到「初读到此为止」就停。重点：实际场景、两个 URL、WHIP 主流程。回答：为什么 HTTP `201` 还不代表已经有媒体？
+> **深入：** Trickle ICE、ICE restart、会话状态机、安全与故障注入；WHEP 行为必须核对草案版本。
 
 > [!important] 标准状态（核对日期：2026-09-13）
 > **WHIP 已不是草案。** 它在 2025 年 3 月发布为 IETF Standards Track **RFC 9725**。
@@ -19,6 +19,60 @@ status: stable
 ## 一句话说明
 
 WHIP（WebRTC-HTTP Ingestion Protocol）用一次 HTTP `POST` 完成发布端到媒体服务器的 SDP Offer/Answer，并用会话资源 URL 承载 ICE 更新和销毁；WHEP（WebRTC-HTTP Egress Protocol）面向播放端。二者标准化的是 **WebRTC 的 HTTP 控制面**，媒体仍通过 ICE、DTLS、SRTP、RTP/RTCP 传输。
+
+## 先记住这三句
+
+1. **WHIP** = 用 HTTP 做 WebRTC **推流/发布**入口；**WHEP** = 对称方向的 **拉流/播放**入口（WHEP 仍是草案，部署前要核对版本）。
+2. HTTP 只传 Offer/Answer、ICE 更新、销毁会话；真正媒体仍是 ICE 上的 DTLS/SRTP（可能走 TURN）。
+3. `201 Created` + `Location` 只说明**控制面会话建好了**；音视频入站还要另看 ICE/DTLS/SRTP 证据。
+
+## 用一句话说清
+
+WHIP / WHEP 用 **HTTP** 来做 WebRTC 的「发布 / 播放入口」：  
+- **WHIP**：推流（ingest）  
+- **WHEP**：拉流（egress）
+
+**第一次必须记住一句：** HTTP 返回 `201 Created` 只说明「会话资源建好了、SDP Answer 有了」——**不等于** ICE/DTLS 已通、更不等于已经有媒体。
+
+## 主流程（直觉）
+
+1. 客户端 `POST` 一个 SDP Offer 到入口 URL  
+2. 服务器返回 Answer + 会话地址（Location）  
+3. 双方再去做 ICE / DTLS，媒体才真正进来  
+4. 结束时用 `DELETE` 回收会话
+
+```mermaid
+sequenceDiagram
+    participant C as 推流客户端
+    participant E as WHIP 入口
+    participant S as 会话/媒体服
+
+    C->>E: POST 入口（SDP Offer）
+    E-->>C: 201 Created（Answer + Location）
+    C->>S: ICE 连通性检查
+    C->>S: DTLS 握手
+    C->>S: SRTP/SRTCP 媒体
+    opt Trickle ICE
+        C->>S: PATCH 会话（候选 fragment）
+        S-->>C: 204 No Content
+    end
+    opt ICE restart
+        C->>S: PATCH 会话（新 ufrag/pwd）
+        S-->>C: 200 OK（新 fragment）
+    end
+    C->>S: DELETE 会话
+    S-->>C: 2xx，释放 ICE/DTLS/媒体
+```
+
+---
+
+> [!warning] 初读到此为止
+> 上面这些已经够第一次阅读。下面先是「原初读区深文」（可跳过），再是工程细节；**第一次直接点文末「第一次阅读下一站」即可。**
+
+
+## 初读展开（原初读区深文，第二轮再读）
+
+> 下面是本篇原先堆在初读区的展开内容，已整体后移，避免第一次阅读过载。
 
 ## 实际场景与角色
 
@@ -37,15 +91,6 @@ WHIP client 是编码器或媒体生产者；WHIP endpoint 接收初始创建请
 
 > [!example] 生活化理解
 > endpoint URL 像“办证窗口”，用来申请新会话；`Location` 返回的 session URL 像“这次业务的受理单号”，只管理这一条会话。它不是媒体播放地址，也不能拿来代表业务流 ID。类比只解释资源关系；真实权限仍由 HTTP 鉴权、服务端状态和不可猜测的 URL 共同决定。
-
-## 问题边界
-
-- **WHIP/WHEP 负责：** 初始 SDP 交换、会话资源定位、可选的 Trickle ICE/ICE restart、会话销毁、HTTP 鉴权与部署入口。
-- **不负责：** 采集、编码算法、RTP 打包、拥塞控制实现、房间成员管理、流目录、录制转码、观众权限和播放器 UI。
-- **媒体不是走 HTTP：** HTTP 只传控制信息；实际音视频通常是 UDP 上的 SRTP，受限网络中也可能经 TURN 中继。
-- **WHIP 不等于 RTMP/HTTP-FLV：** [[RTMP 推流与拉流|RTMP]] 和 [[HTTP-FLV 拉流服务|HTTP-FLV]] 使用不同封装与传输模型。
-- **一次 WHIP 成功不等于端到端直播成功：** 发布会话、媒体入站、后端分发、WHEP/其他播放会话分别需要证据。
-- **与房间信令可并存：** WHIP 可只负责导播或编码器的发布入口，入房、成员和订阅仍由业务信令处理。
 
 ## 两个 URL、两条平面
 
@@ -69,30 +114,24 @@ WHIP client 是编码器或媒体生产者；WHIP endpoint 接收初始创建请
 
 ## WHIP 主流程
 
-```mermaid
-sequenceDiagram
-    participant C as WHIP client
-    participant E as WHIP endpoint
-    participant S as WHIP session / media server
+**图在说什么：** 左客户端先向中间入口 `POST` Offer，拿到 Answer 和会话 Location；再对右会话做 ICE/DTLS，媒体才真正进来；`PATCH`/`DELETE` 只改控制面。
 
-    C->>E: POST endpoint（application/sdp Offer）
-    E-->>C: 201 Created（Answer + Location + 可选 ETag/Link）
-    C->>S: ICE connectivity checks
-    C->>S: DTLS handshake
-    C->>S: SRTP/SRTCP 媒体
-    opt Trickle ICE
-        C->>S: PATCH session（SDP fragment + If-Match）
-        S-->>C: 204 No Content
-    end
-    opt ICE restart
-        C->>S: PATCH session（新 ufrag/pwd + If-Match: *）
-        S-->>C: 200 OK（新 fragment + ETag）
-    end
-    C->>S: DELETE session
-    S-->>C: 2xx，释放 ICE/DTLS/媒体资源
-```
+
+> （本图已上移到初读区，此处不重复。）
+
 
 `201 Created` 只证明 HTTP 资源和 SDP Answer 已生成；之后还要完成 ICE、DTLS，并观察到有效 SRTP/RTP，才能说媒体真正进入服务器。
+
+---
+
+## 问题边界
+
+- **WHIP/WHEP 负责：** 初始 SDP 交换、会话资源定位、可选的 Trickle ICE/ICE restart、会话销毁、HTTP 鉴权与部署入口。
+- **不负责：** 采集、编码算法、RTP 打包、拥塞控制实现、房间成员管理、流目录、录制转码、观众权限和播放器 UI。
+- **媒体不是走 HTTP：** HTTP 只传控制信息；实际音视频通常是 UDP 上的 SRTP，受限网络中也可能经 TURN 中继。
+- **WHIP 不等于 RTMP/HTTP-FLV：** [[RTMP 推流与拉流|RTMP]] 和 [[HTTP-FLV 拉流服务|HTTP-FLV]] 使用不同封装与传输模型。
+- **一次 WHIP 成功不等于端到端直播成功：** 发布会话、媒体入站、后端分发、WHEP/其他播放会话分别需要证据。
+- **与房间信令可并存：** WHIP 可只负责导播或编码器的发布入口，入房、成员和订阅仍由业务信令处理。
 
 ## 1. 创建会话：POST Offer，返回 Answer
 
@@ -602,6 +641,8 @@ termination_reason
 - **下一篇：** [[00-知识地图/专题说明/03 ICE、STUN、TURN 与传输安全|03 ICE、STUN、TURN 与传输安全]]（本专题配套详解已读完，进入下一专题说明）
 - **所属专题：** [[00-知识地图/专题说明/02 信令与 SDP 协商|02 信令与 SDP 协商]]
 - **回看：** [[RTC 知识总览]] · [[00-知识地图/学习路线/学习进度模板|学习进度]] · [[00-知识地图/学习路线/RTC 工程师学习路线.canvas|阶段路线]]
+
+- **第一次阅读下一站：** [[00-知识地图/专题说明/03 ICE、STUN、TURN 与传输安全|03 ICE、STUN、TURN 与传输安全]]（信令专题配套详解读完，去看找路与传输安全）
 
 > 读完先回所属专题做练习/验收，再点下一篇。内部链接最多再追一层；不影响理解的陌生词先记下。
 

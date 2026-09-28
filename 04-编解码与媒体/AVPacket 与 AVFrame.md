@@ -4,17 +4,22 @@ tags: [rtc/concept, rtc/media, rtc/ffmpeg]
 type: concept
 status: growing
 ---
-
 # AVPacket 与 AVFrame
 
 > [!tip] 阅读提示
-> **前置：** [[复用与解复用]]。
-> **初读：** 先读「一句话说明」和「核心机制」，弄清 AVPacket 与 AVFrame 解决什么问题、不负责什么。
-> **深入：** 「工程要点」、「状态与所有权步骤」、「关键参数与取舍」 在实现、联调或排障时再读。
+> **前置：** [[复用与解复用]] 初读区。
+> **初读：** 读到「初读到此为止」就停。弄清：`AVPacket` ≈ 压缩包，`AVFrame` ≈ 原始帧；二者不是 RTP 包。
+> **深入：** 所有权、时间戳字段、send/receive 衔接，对照 [[FFmpeg 解码状态机]] 时再读。
 
 ## 一句话说明
 
 `AVPacket` 表示一个压缩数据包及其流索引、时间戳、持续时间和附加信息；`AVFrame` 表示解码后或待编码的音频/视频帧，包含像素/样本平面、格式、尺寸/样本数、linesize 和时间信息。Packet 是压缩域对象，Frame 是媒体样本域对象，二者不是一一对应关系。
+
+## 先记住这三句
+
+1. **`AVPacket`**：携带压缩数据（及侧数据/时间戳）；**`AVFrame`**：携带解码后的 PCM/YUV 等原始采样。
+2. 典型链路：demux → Packet → 解码器 → Frame →（滤镜/重采样）→ 显示或再编码。
+3. `AVPacket` **不是** RTP 包：一个 RTP 可能只是半个 NAL，多个 Packet 才拼出一帧，层次别混。
 
 ## 核心机制
 
@@ -23,6 +28,8 @@ status: growing
 - Packet 采用引用计数管理数据缓冲；使用 `av_packet_ref/move_ref/unref` 表达共享、转移和释放。Frame 同样可能引用解码器、硬件表面或过滤器缓冲区。
 - `avcodec_send_packet()` 接受的是 `const AVPacket *`。当它返回 0 时，解码器已经接受该输入，调用方可以 `av_packet_unref()` 或复用自己的 packet；解码器可能保留底层引用/副本。若返回 `AVERROR(EAGAIN)`，输入没有被接受，调用方必须保留 packet 不变，先 receive 输出，再重试同一个 packet，不能直接 unref 或读取下一个包。
 - 调用方传给 `avcodec_receive_frame()` 的 `AVFrame` 是可复用容器；下一次 receive 可能 unref/覆盖其引用。若要跨线程或长期排队，使用 `av_frame_ref()`/`av_frame_clone()` 保存对底层 buffer 的引用，消费完再 `av_frame_unref()`。
+
+**图在说什么：** Demux 出的压缩包用 AVPacket 送给解码器；send/receive 配合 EAGAIN，输出落在可复用的 AVFrame 里。
 
 ```mermaid
 flowchart LR
@@ -38,6 +45,15 @@ flowchart LR
 ```
 
 图中的箭头表示 API 状态和引用责任，不表示一个 Packet 必然产生一个 Frame。尤其是 `EAGAIN` 分支，输入还没有被解码器接受，调用方不能释放或替换它。
+
+## 具体例子
+
+解码线程调用 send 后得到 0，可以立即 unref 自己的 packet，因为解码器已经按 API 需要保留数据；但若得到 EAGAIN，packet 仍是待提交输入，必须先 receive 已排队的 frame，再重试同一个 packet。若要把 receive 得到的 frame 放入显示队列，应 `av_frame_ref` 到队列对象，不能把解码线程复用的临时 frame 指针直接入队。
+
+---
+
+> [!warning] 初读到此为止
+> 上面这些已经够第一次阅读。下面是工程展开与排障细节（字段、参数、误区与观测），**第二轮或遇到具体问题时再读**；第一次直接点文末「第一次阅读下一站」即可。
 
 ## 工程要点
 
@@ -98,10 +114,6 @@ packet 队列的时间单位通常是压缩流 time base，frame 队列使用 fr
 - 用一包多帧、跨包帧、EAGAIN、B 帧、硬件 frame、seek/flush 和队列满测试所有权与时序。
 - 使用 ASan/UBSan、FFmpeg debug log 和最小文件回放检查重复释放、悬空引用、buffer pool 耗尽及时间戳跳变。
 
-## 具体例子
-
-解码线程调用 send 后得到 0，可以立即 unref 自己的 packet，因为解码器已经按 API 需要保留数据；但若得到 EAGAIN，packet 仍是待提交输入，必须先 receive 已排队的 frame，再重试同一个 packet。若要把 receive 得到的 frame 放入显示队列，应 `av_frame_ref` 到队列对象，不能把解码线程复用的临时 frame 指针直接入队。
-
 ## 阅读导航
 
 - **上一篇：** [[复用与解复用]]
@@ -109,6 +121,7 @@ packet 队列的时间单位通常是压缩流 time base，frame 队列使用 fr
 - **所属专题：** [[00-知识地图/专题说明/13 RTC 媒体处理与 FFmpeg|13 RTC 媒体处理与 FFmpeg]]
 - **回看：** [[RTC 知识总览]] · [[00-知识地图/学习路线/学习进度模板|学习进度]] · [[00-知识地图/学习路线/RTC 工程师学习路线.canvas|阶段路线]]
 
+- **第一次阅读下一站：** [[FFmpeg 解码状态机]]
 
 > 读完先回所属专题做练习/验收，再点下一篇。内部链接最多再追一层；不影响理解的陌生词先记下。
 

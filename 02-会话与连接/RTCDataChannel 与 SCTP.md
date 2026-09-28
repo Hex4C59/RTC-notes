@@ -8,13 +8,19 @@ status: growing
 # RTCDataChannel 与 SCTP
 
 > [!tip] 阅读提示
-> **前置：** 无强前置；可先从本篇一句话说明读起。
-> **初读：** 先读「一句话说明」和「核心机制」，弄清 RTCDataChannel 与 SCTP 解决什么问题、不负责什么。
-> **深入：** 「工程要点」、「工作流程或状态流」、「工程实现与取舍」 在实现、联调或排障时再读。
+> **前置：** [[DTLS]]、[[数据面与控制面]]。
+> **初读：** 读到「初读到此为止」就停。弄清：DataChannel 走 SCTP over DTLS，不是 RTP；要等 open 再发。
+> **深入：** 可靠性参数、背压、观测，实现时再读。
 
 ## 一句话说明
 
 `RTCDataChannel` 是 WebRTC 对等连接上的应用数据通道。它不承载 RTP 媒体，而是在已建立的 ICE 路径和 DTLS 安全层上运行 SCTP 关联，再通过 DCEP 协商通道参数。SCTP 提供面向消息、多流、可靠或部分可靠以及有序或无序传输能力。
+
+## 先记住这三句
+
+1. DataChannel = 对等连接上的**应用数据**通道（聊天、控制、文件块），不承载 RTP 音视频。
+2. 它跑在 ICE 路径 + DTLS 之上的 **SCTP**；PeerConnection 连上了，还要等通道 `readyState === "open"`。
+3. 可配置有序/部分可靠；发太快看 `bufferedAmount`，用背压别把通道撑爆。
 
 ## 核心机制
 
@@ -22,6 +28,8 @@ status: growing
 - `ordered` 控制消息是否按发送顺序交付；`maxRetransmits` 或 `maxPacketLifeTime` 允许部分可靠传输，二者不能同时设置。可靠有序更像 TCP，部分可靠或无序更适合时效性数据，但底层仍是 SCTP。
 - SCTP 关联由 DTLS 保护，并复用 ICE 建立的传输路径。连接建立不代表通道已经打开，应等待 `readyState === "open"`。
 - `bufferedAmount` 反映尚未交给底层发送的数据量；`bufferedAmountLowThreshold` 和 `bufferedamountlow` 可用于应用层背压。
+
+**图在说什么：** 通道未 open 先别发；open 后还要看 bufferedAmount，超限就暂停生产，等 bufferedamountlow。
 
 ```mermaid
 flowchart TD
@@ -36,6 +44,35 @@ flowchart TD
 ```
 
 图中的背压判断属于应用必须维护的发送节奏。SCTP 提供消息和可靠性能力，但不能让无限增长的 `bufferedAmount` 自动变成低延迟，也不能保证大文件传输不影响共享路径上的媒体。
+
+
+
+**图在说什么：** 路径就绪后左本端经 SCTP/DTLS 与右对端打开 DataChannel；可可靠/部分可靠，消息有边界。
+
+```mermaid
+sequenceDiagram
+    participant A as 本端（左）
+    participant B as 对端（右）
+    Note over A,B: ICE selected pair + DTLS 已就绪（媒体面路径）
+    A->>B: createDataChannel / DCEP OPEN
+    B-->>A: 对端 datachannel 事件 / ACK
+    Note over A,B: readyState → open（才可发）
+    A->>B: 可靠有序消息（如控制命令）
+    A->>B: 部分可靠/无序消息（如光标）
+    opt 背压
+        Note over A: bufferedAmount 升高则暂停生产
+    end
+    Note over A,B: 消息有边界；≠ RTP 媒体通道
+```
+## 示例场景
+
+屏幕协作应用用可靠有序通道发送控制命令，用无序且短生命周期的通道发送鼠标位置。鼠标位置过期后无需重传；控制命令则等待 open、受 bufferedAmount 限制，并带序号防止旧状态覆盖新状态。
+
+
+---
+
+> [!warning] 初读到此为止
+> 上面这些已经够第一次阅读。下面是工程展开与排障细节（字段、指标、状态流），**第二轮或遇到具体问题时再读**；第一次直接点文末「第一次阅读下一站」即可。
 
 ## 工程要点
 
@@ -88,10 +125,6 @@ SCTP 面向消息并支持多流，每条通道可选择有序或无序、可靠
 - 用丢包、带宽限制、乱序、大消息、通道关闭和 PeerConnection restart 验证可靠性与背压。
 - 文件传输测试必须校验块序、文件校验和、取消清理以及媒体 QoE 不下降。
 
-## 示例场景
-
-屏幕协作应用用可靠有序通道发送控制命令，用无序且短生命周期的通道发送鼠标位置。鼠标位置过期后无需重传；控制命令则等待 open、受 bufferedAmount 限制，并带序号防止旧状态覆盖新状态。
-
 ## 阅读导航
 
 - **上一篇：** [[WebRTC 拓扑选择]]
@@ -99,6 +132,7 @@ SCTP 面向消息并支持多流，每条通道可选择有序或无序、可靠
 - **所属专题：** [[00-知识地图/专题说明/01 RTC 系统与低延迟目标|01 RTC 系统与低延迟目标]]
 - **回看：** [[RTC 知识总览]] · [[00-知识地图/学习路线/学习进度模板|学习进度]] · [[00-知识地图/学习路线/RTC 工程师学习路线.canvas|阶段路线]]
 
+- **第一次阅读下一站：** [[00-知识地图/专题说明/02 信令与 SDP 协商|02 信令与 SDP 协商]]（本专题配套详解已读完，进入下一专题说明）
 
 > 读完先回所属专题做练习/验收，再点下一篇。内部链接最多再追一层；不影响理解的陌生词先记下。
 

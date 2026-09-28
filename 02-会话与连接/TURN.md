@@ -8,13 +8,19 @@ status: growing
 # TURN
 
 > [!tip] 阅读提示
-> **前置：** 无强前置；可先从本篇一句话说明读起。
-> **初读：** 先读「一句话说明」和「核心机制」，弄清 TURN 解决什么问题、不负责什么。
-> **深入：** 「工程要点」、「工作流程或状态流」、「工程实现与取舍」 在实现、联调或排障时再读。
+> **前置：** [[ICE]]、[[STUN]]。
+> **初读：** 读到「初读到此为止」就停。弄清：TURN 是鉴权后的公网中继，保连通、费带宽。
+> **深入：** Allocate/权限/生命周期与成本观测，部署排障时再读。
 
 ## 一句话说明
 
 TURN（Traversal Using Relays around NAT）在端到端直连不可用或不稳定时，为客户端分配公网中继地址并转发数据。它提高受限网络下的连接成功率，但会增加服务器带宽、成本和通常的路径延迟；TURN 不是 SFU 或媒体业务服务器。
+
+## 先记住这三句
+
+1. TURN = 直连/打洞不行时，让服务器帮你**中继**媒体与数据；提高成功率，但更耗服务器带宽和钱。
+2. 客户端先 Allocate 拿到中继地址，再作为 relay 候选交给 ICE；仍要检查选中后才会真正走中继。
+3. 「配置了 TURN」≠「通话走了 TURN」；看 selected pair。UDP 受限时还可能落到 TCP/TLS 中继。
 
 ## 核心机制
 
@@ -22,6 +28,34 @@ TURN（Traversal Using Relays around NAT）在端到端直连不可用或不稳�
 - 客户端把 relay candidate 交给 ICE。双方仍需交换并检查候选对，选中 relay pair 后媒体和数据才会沿中继传输。
 - TURN 可承载 UDP，也可在 UDP 受限时使用 TCP 或 [[TLS]] 连接；端口、防火墙和 TLS 证书配置会影响回退路径。
 - Allocation、permission、channel 和 credential 都有生命周期。Refresh、临时凭据和资源配额是长期运行服务的必要控制。
+
+**图在说什么：** 左客户端向中间 TURN 申请中继地址并许可对端；ICE 选中 relay 后，媒体经 TURN 转到右对端（不是 TURN「替你编码」）。
+
+```mermaid
+sequenceDiagram
+    participant A as 客户端（左）
+    participant T as TURN
+    participant B as 对端（右）
+    A->>T: Allocate（鉴权）
+    T-->>A: relay 地址 + lifetime
+    A->>T: CreatePermission（对端地址）
+    Note over A,B: relay 候选交给 ICE；检查通过才真正走中继
+    A->>T: 媒体 / 数据（经 allocation）
+    T->>B: 转发到对端
+    B->>T: 回程流量
+    T->>A: 转发回客户端
+    Note over A,T: 需 Refresh；过期则中继停
+```
+
+## 示例场景
+
+企业网络禁止对外 UDP，但允许 TLS 到 443。客户端先生成 relay UDP 候选失败，随后使用 TURN/TLS allocation；ICE 选中 TLS relay 后 DTLS 和 SRTP 建立，但端到端延迟上升，系统保持音频并降低视频层级。
+
+
+---
+
+> [!warning] 初读到此为止
+> 上面这些已经够第一次阅读。下面是工程展开与排障细节（字段、指标、状态流），**第二轮或遇到具体问题时再读**；第一次直接点文末「第一次阅读下一站」即可。
 
 ## 工程要点
 
@@ -41,6 +75,8 @@ TURN（Traversal Using Relays around NAT）在端到端直连不可用或不稳�
 3. 对端地址通过 CreatePermission 许可；高频媒体可用 ChannelBind/ChannelData 减少开销。
 4. 双方把 relay candidate 交给 ICE 检查，selected relay pair 建立后媒体和数据经 allocation 转发。
 5. 客户端周期 Refresh 延长 allocation 和权限；挂断、超时或异常时服务端回收资源。
+
+**图在说什么：** Allocate 要先过认证才有中继地址与租期；之后还要 CreatePermission / ChannelBind，媒体才能经 relay 转发。
 
 ```mermaid
 flowchart TD
@@ -95,10 +131,6 @@ TURN 不让对端直接访问内网地址，而是让双方主动与中继建立
 - 抓包分别查看 Allocate、Refresh、CreatePermission、ChannelBind/ChannelData，确认转发方向。
 - 强制 relay、阻断 UDP、过期凭据、限制端口和重启 relay 节点，验证回退、重试和资源清理。
 
-## 示例场景
-
-企业网络禁止对外 UDP，但允许 TLS 到 443。客户端先生成 relay UDP 候选失败，随后使用 TURN/TLS allocation；ICE 选中 TLS relay 后 DTLS 和 SRTP 建立，但端到端延迟上升，系统保持音频并降低视频层级。
-
 ## 阅读导航
 
 - **上一篇：** [[STUN]]
@@ -106,6 +138,7 @@ TURN 不让对端直接访问内网地址，而是让双方主动与中继建立
 - **所属专题：** [[00-知识地图/专题说明/03 ICE、STUN、TURN 与传输安全|03 ICE、STUN、TURN 与传输安全]]
 - **回看：** [[RTC 知识总览]] · [[00-知识地图/学习路线/学习进度模板|学习进度]] · [[00-知识地图/学习路线/RTC 工程师学习路线.canvas|阶段路线]]
 
+- **第一次阅读下一站：** [[ICE]]
 
 > 读完先回所属专题做练习/验收，再点下一篇。内部链接最多再追一层；不影响理解的陌生词先记下。
 

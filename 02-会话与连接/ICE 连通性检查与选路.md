@@ -8,13 +8,19 @@ status: growing
 # ICE 连通性检查与选路
 
 > [!tip] 阅读提示
-> **前置：** 无强前置；可先从本篇一句话说明读起。
-> **初读：** 先读「一句话说明」和「核心机制」，弄清 ICE 连通性检查与选路 解决什么问题、不负责什么。
-> **深入：** 「工程要点」、「工作流程或状态流」、「工程实现与取舍」 在实现、联调或排障时再读。
+> **前置：** [[ICE]]、[[ICE 候选与候选对]]、[[STUN]]。
+> **初读：** 读到「初读到此为止」就停。弄清：用 STUN 检查候选对能不能双向通，再提名选出 selected pair。
+> **深入：** 角色/提名细节、consent、状态流转，排障时再读。
 
 ## 一句话说明
 
 ICE 连通性检查是 ICE Agent 使用 STUN 请求验证候选对双向可达性的过程；选路则在通过检查的候选对中，根据角色、优先级和策略提名一条实际使用的路径。候选收集成功不等于路径已连通。
+
+## 先记住这三句
+
+1. 连通性检查 = 对候选对发经认证的 STUN Binding，看能不能打个来回。
+2. 检查成功（Succeeded）只说明「这条对能通」；**selected pair** 才是最终选用的路。
+3. 连通后还要持续 consent；路径挂了可能 disconnected/failed，上层再决定重试或 ICE restart。
 
 ## 核心机制
 
@@ -22,6 +28,25 @@ ICE 连通性检查是 ICE Agent 使用 STUN 请求验证候选对双向可达�
 2. Agent 通过 tie-breaker 确定 controlling/controlled 角色。施控方可在成功检查后提名候选对；受控方接受有效提名。角色冲突必须重新选定，而不是无限重试。
 3. Trickle ICE 允许候选边收集边检查；检查状态可能经历 Frozen、Waiting、In-Progress、Succeeded 或 Failed，最终由选中的 pair 驱动 ICE connected/completed。
 4. 连接建立后仍需持续 consent freshness。选中 pair 失效、对端不再响应或网络切换时，ICE 可能降为 disconnected/failed，并由上层决定重试或 ICE restart。
+
+**图在说什么：** 左 controlling 对右 controlled 发经认证的 Binding；成功后再提名，才成为 selected pair（Succeeded ≠ 已选用）。
+
+```mermaid
+sequenceDiagram
+    participant C as Controlling（左）
+    participant D as Controlled（右）
+    Note over C,D: 双方已有同一代 ufrag/pwd 与候选对
+    C->>D: STUN Binding Request（ICE 短凭据）
+    D-->>C: Binding Response
+    Note over C,D: pair = Succeeded（能通，尚未等于选用）
+    C->>D: 提名（nominate）
+    D-->>C: 确认提名
+    Note over C,D: selected pair；之后 consent freshness 保活
+```
+
+候选对内部状态机见下图。
+
+**图在说什么：** 候选对从等待到发 Binding 检查：成功只是通了，还要 controlling 端提名，才会成为 selected pair。
 
 ```mermaid
 flowchart LR
@@ -38,6 +63,16 @@ flowchart LR
 ```
 
 `Succeeded` 只说明某个候选对检查成功，`selected pair` 才表示传输实际选用了它。真实 checklist 还会处理触发检查、foundation 解冻、角色冲突和多组件收敛，图中没有把这些内部队列简化成“只检查一对”。
+
+## 示例场景
+
+双方都有 host 和 relay 候选。host pair 的 Binding Request 能发出但响应被过滤，pair 进入 Failed；relay pair 的检查成功并被 controlling 端提名，ICE connected 后 DTLS 和 SRTP 才在 relay 路径上建立。
+
+
+---
+
+> [!warning] 初读到此为止
+> 上面这些已经够第一次阅读。下面是工程展开与排障细节（字段、指标、状态流），**第二轮或遇到具体问题时再读**；第一次直接点文末「第一次阅读下一站」即可。
 
 ## 工程要点
 
@@ -90,10 +125,6 @@ flowchart LR
 - 抓包筛选 STUN，核对 username、USE-CANDIDATE、响应方向和实际 RTP/DTLS 是否使用同一路径。
 - 通过关闭候选端口、阻断 UDP、延迟 STUN 响应和网络切换验证清单推进、回退和 consent 失败。
 
-## 示例场景
-
-双方都有 host 和 relay 候选。host pair 的 Binding Request 能发出但响应被过滤，pair 进入 Failed；relay pair 的检查成功并被 controlling 端提名，ICE connected 后 DTLS 和 SRTP 才在 relay 路径上建立。
-
 ## 阅读导航
 
 - **上一篇：** [[ICE 候选与候选对]]
@@ -101,6 +132,7 @@ flowchart LR
 - **所属专题：** [[00-知识地图/专题说明/03 ICE、STUN、TURN 与传输安全|03 ICE、STUN、TURN 与传输安全]]
 - **回看：** [[RTC 知识总览]] · [[00-知识地图/学习路线/学习进度模板|学习进度]] · [[00-知识地图/学习路线/RTC 工程师学习路线.canvas|阶段路线]]
 
+- **第一次阅读下一站：** [[ICE Restart]]
 
 > 读完先回所属专题做练习/验收，再点下一篇。内部链接最多再追一层；不影响理解的陌生词先记下。
 

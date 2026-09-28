@@ -8,13 +8,19 @@ status: growing
 # WebRTC 会话生命周期
 
 > [!tip] 阅读提示
-> **前置：** 无强前置；可先从本篇一句话说明读起。
-> **初读：** 先读「一句话说明」和「核心机制」，弄清 WebRTC 会话生命周期 解决什么问题、不负责什么。
-> **深入：** 「工程要点」、「工作流程或状态流」、「工程实现与取舍」 在实现、联调或排障时再读。
+> **前置：** [[数据面与控制面]]、[[Offer Answer]]（可并行扫一眼）。
+> **初读：** 读到「初读到此为止」就停。弄清：一通电话分哪几段状态，为什么 ICE connected ≠ 已经能看。
+> **深入：** 分隔线后的状态字段、glare/重连与观测，联调排障时再读。
 
 ## 一句话说明
 
 WebRTC 会话生命周期描述一个 `RTCPeerConnection` 从创建、协商和连通，到媒体/数据收发、网络变化、失败恢复及关闭的完整状态演进。它把业务层的呼叫状态、信令状态、ICE 状态、DTLS 状态和媒体收发状态分开观察；任何一层成功，都不能单独证明用户已经可以正常通话。
+
+## 先记住这三句
+
+1. 会话生命周期 = PeerConnection 从创建 → 协商 → 连通 → 收发 → 关闭（或失败恢复）的整段故事。
+2. 业务「已接通」、信令状态、ICE 状态、媒体是否在播——是**几层不同的状态**，任一层成功都不能单独证明画面出来了。
+3. 挂断要可重复：先停采集/发送，再关通道、清信令订阅，避免重连时旧回调捣乱。
 
 ## 核心机制
 
@@ -23,6 +29,36 @@ WebRTC 会话生命周期描述一个 `RTCPeerConnection` 从创建、协商和�
 3. **连通与安全**：ICE 收集候选并检查候选对，选出可达路径；随后在该路径上完成 DTLS。媒体使用 SRTP，数据通道使用 SCTP over DTLS。
 4. **收发与维护**：连接进入 connected/completed 后仍需处理同意性检查、统计采样、轨道变化和重新协商。网络切换或路径失效时，可能触发 ICE restart。
 5. **结束**：业务挂断或不可恢复失败时停止轨道、关闭 DataChannel、关闭 PeerConnection，并清理定时器、信令订阅和服务端会话状态。
+
+**图在说什么：** 左发起方与右对端经信令走完协商 → ICE → DTLS → 媒体；任一层「成功」都不能单独证明画面已出。
+
+```mermaid
+sequenceDiagram
+    participant A as 发起方（左）
+    participant Sig as 信令
+    participant B as 对端（右）
+    A->>Sig: Offer + 候选（可 Trickle）
+    Sig->>B: 转交
+    B-->>Sig: Answer + 候选
+    Sig-->>A: 转交
+    A->>B: ICE Binding 检查
+    B-->>A: 检查响应 / 提名
+    Note over A,B: selected pair
+    A->>B: DTLS 握手
+    B-->>A: Finished
+    A->>B: SRTP 媒体 / 数据通道
+    Note over A,B: 挂断：停轨 → 关通道 → 清信令订阅
+```
+
+## 示例场景
+
+用户看到“已连接”但远端黑屏。时间线显示 signaling/ICE/DTLS 都成功，RTP bytesReceived 增长，然而 decoder 无输出；进一步发现 Offer 中视频 codec 参数与解码器能力不匹配。连接生命周期日志避免把问题错误归因于 NAT。
+
+
+---
+
+> [!warning] 初读到此为止
+> 上面这些已经够第一次阅读。下面是工程展开与排障细节（字段、指标、状态流），**第二轮或遇到具体问题时再读**；第一次直接点文末「第一次阅读下一站」即可。
 
 ## 工程要点
 
@@ -42,6 +78,8 @@ WebRTC 会话生命周期描述一个 `RTCPeerConnection` 从创建、协商和�
 3. **checking**：候选对执行 STUN 检查，选定路径后进入 connected/completed；DTLS 同步推进。
 4. **media/data**：SRTP/RTP、SRTCP 和 SCTP 开始收发，轨道、解码、渲染和 DataChannel 各自有可观测状态。
 5. **disconnected/restart/failed/closed**：网络变化可触发 ICE restart；不可恢复时停止源、关闭通道和释放信令/计时器。
+
+**图在说什么：** 从建 PC/加轨，到 Offer·Answer、ICE、DTLS，再到媒体与反馈，最后挂断清理——会话按阶段前进。
 
 ```mermaid
 flowchart LR
@@ -93,16 +131,14 @@ flowchart LR
 - 通过 getStats、日志和抓包分层确认控制、路径、安全、媒体和播放是否分别成功。
 - 测试正常挂断、信令断线、网络切换、旧 candidate 延迟、双方并发 Offer、设备停止和重复 close。
 
-## 示例场景
-
-用户看到“已连接”但远端黑屏。时间线显示 signaling/ICE/DTLS 都成功，RTP bytesReceived 增长，然而 decoder 无输出；进一步发现 Offer 中视频 codec 参数与解码器能力不匹配。连接生命周期日志避免把问题错误归因于 NAT。
-
 ## 阅读导航
 
 - **上一篇：** [[MediaStream Track 与 Transceiver]]
 - **下一篇：** [[信令与 PeerConnection 状态机]]
 - **所属专题：** [[00-知识地图/专题说明/02 信令与 SDP 协商|02 信令与 SDP 协商]]
 - **回看：** [[RTC 知识总览]] · [[00-知识地图/学习路线/学习进度模板|学习进度]] · [[00-知识地图/学习路线/RTC 工程师学习路线.canvas|阶段路线]]
+
+- **第一次阅读下一站：** [[信令与 PeerConnection 状态机]]
 
 > 读完先回所属专题做练习/验收，再点下一篇。内部链接最多再追一层；不影响理解的陌生词先记下。
 

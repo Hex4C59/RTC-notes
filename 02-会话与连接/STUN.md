@@ -8,13 +8,19 @@ status: growing
 # STUN
 
 > [!tip] 阅读提示
-> **前置：** 无强前置；可先从本篇一句话说明读起。
-> **初读：** 先读「一句话说明」和「核心机制」，弄清 STUN 解决什么问题、不负责什么。
-> **深入：** 「工程要点」、「工作流程或状态流」、「工程实现与取舍」 在实现、联调或排障时再读。
+> **前置：** [[ICE]]（可并行）。
+> **初读：** 读到「初读到此为止」就停。弄清：STUN 帮你发现「外面看到的地址」并做连通检查，但它不是中继。
+> **深入：** Binding 细节、consent、观测指标，联调时再读。
 
 ## 一句话说明
 
 STUN（Session Traversal Utilities for NAT）是一组用于发现外部映射、执行 Binding 请求和承载 ICE 检查的工具协议。它能帮助端点获得 server-reflexive 地址，但不保证任意 NAT、防火墙或对端组合都能直连。
+
+## 先记住这三句
+
+1. STUN 最常见用途：问服务器「你看到我的公网地址/端口是什么？」——得到 server-reflexive 候选。
+2. ICE 的连通性检查也大量用 STUN Binding 消息验证「这条候选对能不能双向通」。
+3. STUN **不转发媒体**；直连不行时要靠 TURN 中继，别把 STUN 服务器当成通用转发器。
 
 ## 核心机制
 
@@ -22,6 +28,30 @@ STUN（Session Traversal Utilities for NAT）是一组用于发现外部映射�
 - ICE 使用会话级短期用户名和密码保护检查请求；FINGERPRINT、MESSAGE-INTEGRITY 等属性帮助区分和验证 STUN 消息。
 - 同一个端点经不同目的地发送请求时，NAT 可能创建不同映射。因此从一个 STUN Server 看到的地址只是一条路径上的观察结果。
 - STUN 反射地址是候选来源之一。直连失败时，应由 ICE 选择 TURN relay，而不是让应用把 STUN 当成通用中继。
+
+**图在说什么：** 左客户端经 NAT 问中间 STUN「你看见我的公网地址吗」；STUN 只回观察结果，不转发媒体。
+
+```mermaid
+sequenceDiagram
+    participant C as 客户端（左）
+    participant N as NAT
+    participant S as STUN（中）
+    C->>N: Binding Request
+    N->>S: 源地址变成公网映射
+    S-->>N: Binding Response（XOR-MAPPED-ADDRESS）
+    N-->>C: 带回观察结果
+    Note over C: 形成 srflx 候选交给 ICE；≠ 已与对端直连
+```
+
+## 示例场景
+
+客户端向两个 STUN server 查询，分别看到相同和不同的外部端口。应用不直接选择其中一个“更像公网”的地址，而是把结果作为候选交给 ICE；若对端检查无法回包，最终使用 TURN relay，并保留查询差异供 NAT 诊断。
+
+
+---
+
+> [!warning] 初读到此为止
+> 上面这些已经够第一次阅读。下面是工程展开与排障细节（字段、指标、状态流），**第二轮或遇到具体问题时再读**；第一次直接点文末「第一次阅读下一站」即可。
 
 ## 工程要点
 
@@ -41,6 +71,10 @@ STUN（Session Traversal Utilities for NAT）是一组用于发现外部映射�
 3. ICE 连通性检查复用 STUN 消息，使用会话级 ufrag/pwd 验证请求和响应，必要时携带优先级、角色和提名属性。
 4. 连接建立后按周期发送 consent freshness；超时或错误响应使上层重新检查、切换 relay 或 restart。
 5. 事务成功、失败、超时和关闭时分别释放事务表与定时器。
+
+> 下列带示例地址的图是工程区细版，初读看上面那张即可。
+
+**图在说什么：** 左客户端经中间 NAT 向右 STUN 发 Binding；服务器只回报观察到的公网映射，形成 `srflx` 候选——不等于已经能和对端直连。
 
 ```mermaid
 sequenceDiagram
@@ -90,10 +124,6 @@ STUN 是工具协议，不是“打洞成功”的保证。服务器只能告诉
 - 抓包核对 magic cookie、transaction ID、Binding 请求/响应方向和 MESSAGE-INTEGRITY。
 - 在不同 NAT、UDP 阻断、IPv4/IPv6、服务器故障和高并发连接下验证回退和限流。
 
-## 示例场景
-
-客户端向两个 STUN server 查询，分别看到相同和不同的外部端口。应用不直接选择其中一个“更像公网”的地址，而是把结果作为候选交给 ICE；若对端检查无法回包，最终使用 TURN relay，并保留查询差异供 NAT 诊断。
-
 ## 阅读导航
 
 - **上一篇：** [[NAT 映射与过滤行为]]
@@ -101,6 +131,7 @@ STUN 是工具协议，不是“打洞成功”的保证。服务器只能告诉
 - **所属专题：** [[00-知识地图/专题说明/03 ICE、STUN、TURN 与传输安全|03 ICE、STUN、TURN 与传输安全]]
 - **回看：** [[RTC 知识总览]] · [[00-知识地图/学习路线/学习进度模板|学习进度]] · [[00-知识地图/学习路线/RTC 工程师学习路线.canvas|阶段路线]]
 
+- **第一次阅读下一站：** [[TURN]]
 
 > 读完先回所属专题做练习/验收，再点下一篇。内部链接最多再追一层；不影响理解的陌生词先记下。
 

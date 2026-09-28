@@ -8,13 +8,59 @@ status: growing
 # MediaStream Track 与 Transceiver
 
 > [!tip] 阅读提示
-> **前置：** 无强前置；可先从本篇一句话说明读起。
-> **初读：** 先读「一句话说明」和「核心机制」，弄清 MediaStream Track 与 Transceiver 解决什么问题、不负责什么。
-> **深入：** 「工程要点」、「工作流程或状态流」、「工程实现与取舍」 在实现、联调或排障时再读。
+> **前置：** [[Offer Answer]]、[[WebRTC 会话生命周期]]。
+> **初读：** 读到「初读到此为止」就停。弄清 Track / Stream / Transceiver / Sender-Receiver 各管哪一层。
+> **深入：** 生命周期操作差异、replaceTrack 边界，联调时再读。
 
 ## 一句话说明
 
 `MediaStream` 是用于分组媒体轨道的容器；`MediaStreamTrack` 表示一个音频或视频源的逻辑输出；`RTCRtpSender` 和 `RTCRtpReceiver` 分别连接发送、接收媒体；`RTCRtpTransceiver` 则把同一个 `m=` 媒体段的发送器和接收器及其方向绑定起来。它们不是同一层的“流”对象。
+
+## 先记住这三句
+
+1. **Track** = 一条音或视频逻辑源；**MediaStream** = 把若干 Track 捆在一起的容器（分组/msid）。
+2. **Transceiver** = PeerConnection 里一个收发单元（常带 mid + 方向），下面挂着 Sender / Receiver。
+3. `replaceTrack` 常用来换摄像头/屏幕且不一定重协商；改方向、增删媒体段通常仍要重新 Offer/Answer。静音用 `enabled`，真正结束源用 `stop()`。
+
+## 用一句话说清
+
+`MediaStreamTrack` 是一条媒体轨（一路音或一路画）；`Transceiver` 是协商里「这一路怎么进/出」的座位。`addTrack` / `ontrack` 是挂上与收到；换同类摄像头常用 `replaceTrack`，改方向或能力仍要再协商。
+
+**第一次：** Track 是媒体，Transceiver 是协商座位——两者一起才完整。
+
+（时序图在初读；mid/direction 细节在折叠线后。）
+
+```mermaid
+sequenceDiagram
+    participant L as 本端应用
+    participant PC as 本端 PC
+    participant Sig as 信令
+    participant R as 对端 PC/应用
+    L->>PC: addTrack / addTransceiver
+    Note over PC: 绑定 Sender + mid/direction
+    PC->>PC: createOffer + setLocalDescription
+    PC->>Sig: Offer（含 m= / msid）
+    Sig->>R: 转发 Offer
+    R->>R: setRemote + Answer
+    R->>Sig: Answer
+    Sig-->>PC: Answer
+    PC->>PC: setRemoteDescription
+    Note over R: ontrack → 远端 Track
+    opt 换摄像头/屏幕（同类源）
+        L->>PC: sender.replaceTrack(新 Track)
+        Note over PC,R: 常可不动协商；能力/方向变则再 Offer
+    end
+```
+
+---
+
+> [!warning] 初读到此为止
+> 上面这些已经够第一次阅读。下面先是「原初读区深文」（可跳过），再是工程细节；**第一次直接点文末「第一次阅读下一站」即可。**
+
+
+## 初读展开（原初读区深文，第二轮再读）
+
+> 下面是本篇原先堆在初读区的展开内容，已整体后移，避免第一次阅读过载。
 
 ## 核心机制
 
@@ -22,6 +68,8 @@ status: growing
 - `addTransceiver(kind)` 或 `addTransceiver(track)` 显式创建一个收发单元。`direction` 可为 `sendrecv`、`sendonly`、`recvonly` 或 `inactive`，它对应 SDP 媒体段的意图。
 - `sender.replaceTrack()` 可在同一发送单元内更换相同媒体类型的源，常用于换摄像头或屏幕源；若改变方向、编码能力或需要新增/移除媒体段，仍要重新协商。
 - `track.enabled` 适合暂时静音/停画；`track.stop()` 结束底层源。停止本地轨道、移除发送器和关闭 Transceiver 是不同的生命周期操作。
+
+**图在说什么：** 源变成 Track，经 Sender/Transceiver（mid+方向）对应 SDP 媒体段；Receiver 再给出远端 Track。
 
 ```mermaid
 flowchart LR
@@ -35,6 +83,25 @@ flowchart LR
 ```
 
 这是一张对象关系图，不代表媒体字节必须依次复制经过所有 JavaScript 对象。`MediaStream` 主要提供轨道分组，真正的发送关系由 sender、transceiver、协商结果和底层 transport 共同决定。
+
+**图在说什么：** 左本端把 Track 挂到 Transceiver/Sender，经中间协商把描述交给右对端；远端 `ontrack` 拿到接收轨。换同类源可用 `replaceTrack`，改方向/能力仍要再协商。
+
+
+> （本图已上移到初读区，此处不重复。）
+
+
+## 示例场景
+
+视频会议中用户从摄像头切换到屏幕共享。应用保留原视频 transceiver，调用 replaceTrack 仅适用于同类源且编码约束兼容；若方向或能力变化触发协商，则通过新的 Offer/Answer 更新媒体段，并在远端收到 ontrack/首帧后确认切换完成。
+
+- 会话承载：[[WebRTC 会话生命周期]]管理轨道和收发单元的创建、更新与销毁。
+- 协商表达：[[Offer Answer]]把方向、媒体能力和 `mid` 写入双方描述。
+- 描述字段：[[SDP]]承载 `m=`、方向、编解码和 `msid` 等协商结果。
+- 本地设备：[[采集与渲染]]提供轨道源并负责播放端输出。
+- 时间关系：[[音视频同步]]处理不同轨道到达和播放时的时钟对齐。
+
+
+---
 
 ## 工程要点
 
@@ -50,6 +117,7 @@ flowchart LR
 - **所属专题：** [[00-知识地图/专题说明/02 信令与 SDP 协商|02 信令与 SDP 协商]]
 - **回看：** [[RTC 知识总览]] · [[00-知识地图/学习路线/学习进度模板|学习进度]] · [[00-知识地图/学习路线/RTC 工程师学习路线.canvas|阶段路线]]
 
+- **第一次阅读下一站：** [[WebRTC 会话生命周期]]
 
 > 读完先回所属专题做练习/验收，再点下一篇。内部链接最多再追一层；不影响理解的陌生词先记下。
 
@@ -98,16 +166,6 @@ Track 是媒体源的逻辑输出，Sender/Receiver 是 RTP 方向的端点，Tr
 - 关联 negotiationneeded、Offer/Answer 版本、ontrack 时间、首个解码帧、首帧渲染和 replaceTrack 结果。
 - 观察发送/接收 SSRC、编码层、帧率、分辨率、解码失败和渲染状态，区分轨道停用与传输失败。
 - 测试加轨、静音、换摄像头、屏幕共享、移除、网络重连和关闭，验证重复操作的幂等性。
-
-## 示例场景
-
-视频会议中用户从摄像头切换到屏幕共享。应用保留原视频 transceiver，调用 replaceTrack 仅适用于同类源且编码约束兼容；若方向或能力变化触发协商，则通过新的 Offer/Answer 更新媒体段，并在远端收到 ontrack/首帧后确认切换完成。
-
-- 会话承载：[[WebRTC 会话生命周期]]管理轨道和收发单元的创建、更新与销毁。
-- 协商表达：[[Offer Answer]]把方向、媒体能力和 `mid` 写入双方描述。
-- 描述字段：[[SDP]]承载 `m=`、方向、编解码和 `msid` 等协商结果。
-- 本地设备：[[采集与渲染]]提供轨道源并负责播放端输出。
-- 时间关系：[[音视频同步]]处理不同轨道到达和播放时的时钟对齐。
 
 ## 参考资料
 

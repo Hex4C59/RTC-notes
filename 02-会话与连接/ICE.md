@@ -8,13 +8,19 @@ status: growing
 # ICE
 
 > [!tip] 阅读提示
-> **前置：** 无强前置；可先从本篇一句话说明读起。
-> **初读：** 先读「一句话说明」和「核心机制」，弄清 ICE 解决什么问题、不负责什么。
-> **深入：** 「工程要点」、「工作流程或状态流」、「工程实现与取舍」 在实现、联调或排障时再读。
+> **前置：** [[Offer Answer]]、[[STUN]]、[[TURN]]（后两者可先扫「先记住」）。
+> **初读：** 读到「初读到此为止」就停。弄清：ICE 负责找路与验路，选中路径后才谈安全媒体。
+> **深入：** 候选类型、提名、restart 与观测，排障时再读。
 
 ## 一句话说明
 
 ICE（Interactive Connectivity Establishment）是组合地址发现、候选交换、连通性检查和路径选择的框架。它使用 STUN 发现或验证端点地址，使用 TURN 提供中继，并在候选对中选出一条双方可达的传输路径。
+
+## 先记住这三句
+
+1. ICE = 收集可能的地址（候选）→ 双方交换 → 试连通 → 选出一条真正能用的路径。
+2. 候选常见来源：本机地址、经 STUN 看到的公网映射、经 TURN 的中继地址；「有候选」≠「已连通」。
+3. 选中路径之后，才在上面做 DTLS/SRTP；网络一变还可能 ICE restart 再找路。
 
 ## 核心机制
 
@@ -22,6 +28,26 @@ ICE（Interactive Connectivity Establishment）是组合地址发现、候选交
 - 双方通过 SDP 或 Trickle ICE 交换候选和 ICE 凭据，将本地候选与远端候选组成候选对。
 - Agent 按优先级建立检查清单，使用 STUN Binding 检查候选对的双向可达性，再由 controlling/controlled 角色提名并选定 pair。
 - ICE 还承担路径上的对端许可和持续可达性维护。选路成功后，DTLS、SRTP 和 SCTP 才能使用这条路径承载数据。
+
+**图在说什么：** 左本端与右对端先经信令交换候选，再互相发 STUN Binding 验路；中间可经 STUN/TURN 帮忙，但最终要选出一条 selected pair。
+
+```mermaid
+sequenceDiagram
+    participant A as 本端（左）
+    participant Sig as 信令
+    participant B as 对端（右）
+    A->>Sig: 候选 + ufrag/pwd
+    Sig->>B: 转交候选
+    B->>Sig: 候选 + ufrag/pwd
+    Sig->>A: 转交候选
+    A->>B: STUN Binding 检查
+    B-->>A: Binding 响应
+    Note over A,B: controlling 提名 → selected pair；其后才 DTLS/SRTP
+```
+
+单端「收集 → 检查 → 提名 → 维持」见下图；与上图互补。
+
+**图在说什么：** ICE 总流程：收集候选 → 信令交换 → 组成检查清单 → Binding 验路 → 提名选路 → 再交给 DTLS/媒体。
 
 ```mermaid
 flowchart LR
@@ -33,6 +59,16 @@ flowchart LR
     D --> C["consent freshness<br/>持续确认可达与许可"]
     C -. "路径失效或网络变化" .-> G
 ```
+
+## 示例场景
+
+浏览器 A 在家庭网络，浏览器 B 在企业网络。双方交换 host、srflx、relay 候选；host 被过滤，srflx 检查超时，relay 成功。ICE 选定 relay 后，DTLS 和 SRTP 在该路径建立，业务层不需要知道具体中继实现细节，但应记录路径类型和延迟。
+
+
+---
+
+> [!warning] 初读到此为止
+> 上面这些已经够第一次阅读。下面是工程展开与排障细节（字段、指标、状态流），**第二轮或遇到具体问题时再读**；第一次直接点文末「第一次阅读下一站」即可。
 
 ## 工程要点
 
@@ -85,10 +121,6 @@ ICE 将“地址发现”和“可达性验证”拆开：STUN 看到的映射�
 - 抓包核对 STUN/DTLS/RTP 是否复用 selected pair，检查信令中候选和凭据是否属于同一 generation。
 - 在直连、强制 relay、UDP 阻断、网络切换和多网卡环境做对照，报告成功率和成本。
 
-## 示例场景
-
-浏览器 A 在家庭网络，浏览器 B 在企业网络。双方交换 host、srflx、relay 候选；host 被过滤，srflx 检查超时，relay 成功。ICE 选定 relay 后，DTLS 和 SRTP 在该路径建立，业务层不需要知道具体中继实现细节，但应记录路径类型和延迟。
-
 ## 阅读导航
 
 - **上一篇：** [[TURN]]
@@ -96,6 +128,7 @@ ICE 将“地址发现”和“可达性验证”拆开：STUN 看到的映射�
 - **所属专题：** [[00-知识地图/专题说明/03 ICE、STUN、TURN 与传输安全|03 ICE、STUN、TURN 与传输安全]]
 - **回看：** [[RTC 知识总览]] · [[00-知识地图/学习路线/学习进度模板|学习进度]] · [[00-知识地图/学习路线/RTC 工程师学习路线.canvas|阶段路线]]
 
+- **第一次阅读下一站：** [[ICE 候选与候选对]]
 
 > 读完先回所属专题做练习/验收，再点下一篇。内部链接最多再追一层；不影响理解的陌生词先记下。
 

@@ -8,13 +8,19 @@ status: growing
 # Offer Answer
 
 > [!tip] 阅读提示
-> **前置：** 无强前置；可先从本篇一句话说明读起。
-> **初读：** 先读「一句话说明」和「核心机制」，弄清 Offer Answer 解决什么问题、不负责什么。
-> **深入：** 「工程要点」、「工作流程或状态流」、「工程实现与取舍」 在实现、联调或排障时再读。
+> **前置：** [[数据面与控制面]]；SDP 字段细节见 [[SDP]]（可后读）。
+> **初读：** 读到「初读到此为止」就停。弄清：谁发 Offer、谁回 Answer，以及「协商成功 ≠ 媒体已通」。
+> **深入：** glare、重新协商、候选暂存与观测，实现联调时再读。
 
 ## 一句话说明
 
 Offer/Answer 是一种协商模型：一方提出会话能力和当前意图，另一方返回自己接受的兼容子集。它通过 SDP 落地媒体类型、方向、编解码、传输和安全参数，是“双方愿意怎样通信”的控制层，不等同于媒体已连通。
+
+## 先记住这三句
+
+1. Offer/Answer = 一方提出「我能怎样通话」，另一方回「我接受的兼容子集」——谈的是能力与意图，不是媒体包本身。
+2. 通常走：createOffer → 信令转发 → 对端 Answer → 双方 setRemote；候选可以稍后 Trickle。
+3. 协商完成只说明参数对齐了；真正通媒体还要 ICE/DTLS 成功。
 
 ## 核心机制
 
@@ -23,23 +29,41 @@ Offer/Answer 是一种协商模型：一方提出会话能力和当前意图，�
 - 增加或移除 Track、改变 Transceiver 方向、编码能力或 ICE 凭据可能触发重新协商。`mid` 和 `m=` 段的生命周期必须在双方状态机中保持一致。
 - 同时出现两个 Offer 会产生 glare。应用应采用完美协商、角色约束或回滚策略，不能靠随机延迟掩盖状态竞争。
 
+**图在说什么：** 左发起方提出 Offer，经中间信令到右应答方，再 Answer 回来；中间栏只传描述，不传媒体。
+
 ```mermaid
 sequenceDiagram
-    participant A as 发起方 A
-    participant S as 业务信令通道
-    participant B as 应答方 B
+    participant A as 发起方（左）
+    participant Sig as 信令
+    participant B as 应答方（右）
     A->>A: createOffer + setLocalDescription
-    A->>S: Offer（会话 ID、版本、SDP）
-    S->>B: 转交 Offer
+    A->>Sig: Offer（SDP）
+    Sig->>B: 转交 Offer
     B->>B: setRemoteDescription
     B->>B: createAnswer + setLocalDescription
-    B->>S: Answer（对应版本）
-    S->>A: 转交 Answer
+    B-->>Sig: Answer（SDP）
+    Sig-->>A: 转交 Answer
     A->>A: setRemoteDescription
-    Note over A,B: Trickle ICE 候选可在描述之后增量交换；媒体仍需 ICE/DTLS 成功
+    Note over A,B: 候选可 Trickle；协商成功 ≠ 媒体已通（还要 ICE/DTLS）
 ```
 
-信令服务器负责传递双方描述，不替浏览器“接受”媒体参数。重新协商会再次走类似流程，并必须用 signaling state、版本和角色处理并发 Offer。
+信令只传递双方描述，不替浏览器“接受”媒体参数。重新协商会再走类似流程，并用 signaling state、版本和角色处理并发 Offer（glare）。
+
+## 示例场景
+
+双方同时点击“开启摄像头”，各自触发 negotiationneeded 并创建 Offer。采用协商角色后，一方暂存本地 Offer，礼貌端回滚并接受远端 Offer，再生成 Answer；信令日志和 signalingState 能解释为什么没有创建第二条 PeerConnection。
+
+- 描述载体：[[SDP]]承载 Offer/Answer 的媒体、传输和安全字段。
+- 会话过程：[[WebRTC 会话生命周期]]定义创建、更新、恢复和关闭的时序。
+- 媒体变更：[[MediaStream Track 与 Transceiver]]的方向或收发单元变化可能触发重新协商。
+- 候选更新：[[ICE Restart]]通过新的 Offer/Answer 开始新的 ICE generation。
+- 消息路由：[[信令服务器]]传递描述和候选，但不代替媒体连接。
+
+
+---
+
+> [!warning] 初读到此为止
+> 上面这些已经够第一次阅读。下面是工程展开与排障细节（字段、指标、状态流），**第二轮或遇到具体问题时再读**；第一次直接点文末「第一次阅读下一站」即可。
 
 ## 工程要点
 
@@ -55,6 +79,7 @@ sequenceDiagram
 - **所属专题：** [[00-知识地图/专题说明/02 信令与 SDP 协商|02 信令与 SDP 协商]]
 - **回看：** [[RTC 知识总览]] · [[00-知识地图/学习路线/学习进度模板|学习进度]] · [[00-知识地图/学习路线/RTC 工程师学习路线.canvas|阶段路线]]
 
+- **第一次阅读下一站：** [[SDP]]
 
 > 读完先回所属专题做练习/验收，再点下一篇。内部链接最多再追一层；不影响理解的陌生词先记下。
 
@@ -103,16 +128,6 @@ Offer 表达“我能提供并希望使用什么”，Answer 表达“在这些�
 - 关联 Offer/Answer 中的 m-line、mid、方向、codec、ICE 凭据、fingerprint 与 selected pair。
 - 信令抓包检查 offer、answer、candidate 的目标、顺序、重复和版本；客户端检查 negotiationneeded 与 onicecandidate。
 - 测试双方同时发起、重复消息、候选乱序、加轨/换轨、ICE restart、网络断线和挂断竞态。
-
-## 示例场景
-
-双方同时点击“开启摄像头”，各自触发 negotiationneeded 并创建 Offer。采用协商角色后，一方暂存本地 Offer，礼貌端回滚并接受远端 Offer，再生成 Answer；信令日志和 signalingState 能解释为什么没有创建第二条 PeerConnection。
-
-- 描述载体：[[SDP]]承载 Offer/Answer 的媒体、传输和安全字段。
-- 会话过程：[[WebRTC 会话生命周期]]定义创建、更新、恢复和关闭的时序。
-- 媒体变更：[[MediaStream Track 与 Transceiver]]的方向或收发单元变化可能触发重新协商。
-- 候选更新：[[ICE Restart]]通过新的 Offer/Answer 开始新的 ICE generation。
-- 消息路由：[[信令服务器]]传递描述和候选，但不代替媒体连接。
 
 ## 参考资料
 

@@ -8,23 +8,62 @@ status: growing
 # 信令与 PeerConnection 状态机
 
 > [!tip] 阅读提示
-> **前置：** [[Offer Answer]]、[[SDP]]、[[WebRTC 会话生命周期]]。
-> **初读：** 先读“一句话说明”“问题边界”“双状态机”和“非法转移”，弄清 signalingState 与 connectionState 各管什么。
-> **深入：** 回滚、glare、ICE restart 与观测在排障时再读。
+> **前置：** [[Offer Answer]]、[[WebRTC 会话生命周期]]。
+> **初读：** 读到「初读到此为止」就停。弄清 signalingState 与 connectionState 各管什么，以及常见非法转移/glare。
+> **深入：** 回滚、与业务进房对齐、观测，排障时再读。
 
 ## 一句话说明
 
 WebRTC 会话同时受 **信令状态机**（`signalingState` / Offer-Answer）与 **PeerConnection 连接状态机**（`connectionState` / ICE+DTLS 聚合）约束。前者描述 SDP 协商走到哪，后者描述传输是否真的可用；两者任一失败都可能导致“看起来进房了但没媒体”。
 
-## 问题边界
+## 先记住这三句
 
-- **上游：** 业务信令（进房、呼叫、重协商）、本地 transceiver/轨道变更、ICE restart 请求。
-- **下游：** 可发送/接收的媒体方向、DTLS/SRTP 是否运行、数据通道是否可用。
-- **易混淆：**
-  - 业务“已进房”≠ `stable` 且 `connected`。
-  - `have-local-offer` 时又创建新 Offer，需按实现排队或回滚。
-  - `connectionState=connected` 仍可能单向无媒体（方向、收发器未协商、SFU 未订阅）。
-  - `iceConnectionState` 与 `connectionState` 不同步时，以更细子状态排障。
+1. **signalingState** 管 Offer/Answer 协商进度；**connectionState** 管传输连接大致是否可用——两套灯，别混。
+2. 业务「已进房」≠ 已经 `stable` 且 `connected`；`connected` 仍可能没画面（方向/订阅不对）。
+3. 两边同时发 Offer 叫 glare，要靠角色/回滚策略处理，不能靠瞎延迟碰运气。
+
+## 用一句话说清
+
+信令消息（Offer/Answer、候选）是**外因**；PeerConnection 上的状态（signaling / ICE / connection）是**本端进度条**。信令成功只说明「约定送到了」，不等于 ICE/DTLS/媒体已经通。
+
+**第一次对照：**
+
+| 你看到 | 真正意思 |
+| --- | --- |
+| setRemoteDescription 成功 | 对端描述装上了 |
+| ICE connected | 有一条候选路通了 |
+| 有 ontrack / 出声出画 | 媒体真的来了 |
+
+（状态轴对照与时序图在折叠线后首屏已留图时可看图。）
+
+```mermaid
+sequenceDiagram
+    participant Local as 本端 PC（左）
+    participant Sig as 信令（中）
+    participant Remote as 对端 PC（右）
+    Local->>Local: createOffer + setLocalDescription
+    Note over Local: signalingState → have-local-offer
+    Local->>Sig: 发送 Offer（+ trickle 候选）
+    Sig->>Remote: 转发 Offer / 候选
+    Remote->>Remote: setRemoteDescription(Offer)
+    Remote->>Remote: createAnswer + setLocalDescription
+    Remote->>Sig: 发送 Answer（+ 候选）
+    Sig-->>Local: 转发 Answer / 候选
+    Local->>Local: setRemoteDescription(Answer)
+    Note over Local: signalingState → stable
+    Local->>Local: addIceCandidate（持续）
+    Note over Local,Remote: connectionState 另由 ICE/DTLS 聚合；信令通 ≠ 媒体通
+```
+
+---
+
+> [!warning] 初读到此为止
+> 上面这些已经够第一次阅读。下面先是「原初读区深文」（可跳过），再是工程细节；**第一次直接点文末「第一次阅读下一站」即可。**
+
+
+## 初读展开（原初读区深文，第二轮再读）
+
+> 下面是本篇原先堆在初读区的展开内容，已整体后移，避免第一次阅读过载。
 
 ## 核心机制
 
@@ -41,6 +80,8 @@ stable
 glare: 双方同时 offer → 一方回滚或按规则成为 Answerer
 closed: PC close 后信令不再前进
 ```
+
+**图在说什么：** signalingState 在 stable 与 have-local/remote-offer 等之间转移；非法顺序或 glare 要按规则处理。
 
 ```mermaid
 stateDiagram-v2
@@ -80,6 +121,13 @@ connected -> failed
 
 它比 `iceConnectionState` 更“用户可感知”，但排障时仍要下钻 ICE/DTLS 子状态。对照 [[ICE 状态机]]。
 
+
+**图在说什么：** 中间信令送来 Offer/Answer/候选，驱动本端 PeerConnection 状态；信令成功 ≠ ICE/DTLS/媒体已通。
+
+
+> （本图已上移到初读区，此处不重复。）
+
+
 ## 非法转移与 glare
 
 | 场景 | 风险 | 常见处理 |
@@ -89,6 +137,22 @@ connected -> failed
 | 未 `stable` 就加轨道并期望立刻生效 | direction 未协商 | 回 stable 再谈判 |
 | `setRemoteDescription` 失败被吞 | 无音无画 | 必须记录错误名与 SDP type |
 
+## 具体例子
+
+A 已 `have-local-offer`，B 同时发出 Offer。A 若直接 setRemoteDescription(B 的 Offer) 可能抛错。正确路径之一：A rollback 到 stable，再作为 Answerer 处理 B 的 Offer，或按产品规则让一方取消本地 Offer。另一例：`connectionState=connected` 但远端无画——查 transceiver.direction 是否 `recvonly`/`inactive`，以及 SFU 订阅是否生效，而不是先重谈整份 SDP。
+
+
+---
+
+## 问题边界
+
+- **上游：** 业务信令（进房、呼叫、重协商）、本地 transceiver/轨道变更、ICE restart 请求。
+- **下游：** 可发送/接收的媒体方向、DTLS/SRTP 是否运行、数据通道是否可用。
+- **易混淆：**
+  - 业务“已进房”≠ `stable` 且 `connected`。
+  - `have-local-offer` 时又创建新 Offer，需按实现排队或回滚。
+  - `connectionState=connected` 仍可能单向无媒体（方向、收发器未协商、SFU 未订阅）。
+  - `iceConnectionState` 与 `connectionState` 不同步时，以更细子状态排障。
 ## 关键对象与数据
 
 - 本地/远端 description 的 type（offer/answer/rollback）与 SDP 字节
@@ -151,16 +215,14 @@ business intent -> negotiationneeded
 - 最小场景：正常进房；双方同时 mute/unmute 触发 glare；ICE restart；中途加屏共享轨道再协商。
 - 工具：[[webrtc-internals]]、[[WebRTC 状态机诊断]]；业务日志用同一 session/pc id 关联。
 
-## 具体例子
-
-A 已 `have-local-offer`，B 同时发出 Offer。A 若直接 setRemoteDescription(B 的 Offer) 可能抛错。正确路径之一：A rollback 到 stable，再作为 Answerer 处理 B 的 Offer，或按产品规则让一方取消本地 Offer。另一例：`connectionState=connected` 但远端无画——查 transceiver.direction 是否 `recvonly`/`inactive`，以及 SFU 订阅是否生效，而不是先重谈整份 SDP。
-
 ## 阅读导航
 
 - **上一篇：** [[WebRTC 会话生命周期]]
 - **下一篇：** [[SIP]]
 - **所属专题：** [[00-知识地图/专题说明/02 信令与 SDP 协商|02 信令与 SDP 协商]]
 - **回看：** [[RTC 知识总览]] · [[00-知识地图/学习路线/学习进度模板|学习进度]] · [[00-知识地图/学习路线/RTC 工程师学习路线.canvas|阶段路线]]
+
+- **第一次阅读下一站：** [[SIP]]
 
 > 读完先回所属专题做练习/验收，再点下一篇。内部链接最多再追一层；不影响理解的陌生词先记下。
 

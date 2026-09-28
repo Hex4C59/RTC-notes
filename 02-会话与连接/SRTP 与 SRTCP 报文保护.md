@@ -8,13 +8,19 @@ status: growing
 # SRTP 与 SRTCP 报文保护
 
 > [!tip] 阅读提示
-> **前置：** [[RTP]]、[[RTCP]]、[[DTLS]]、[[SRTP]]。
-> **初读：** 先读“定义”“解决的问题”“工作流程或状态流”，分清媒体保护、密钥协商与重放防护的职责。
-> **深入：** 算法套件、exporter、ROC、nonce 和重放窗口留到实现或排障时逐项阅读；第一轮可先读 [[SRTP]]。
+> **前置：** [[SRTP]]、[[DTLS]]；[[RTP]] / [[RTCP]] 可并行扫一眼。
+> **初读：** 读到「初读到此为止」就停。弄清：保护什么、和 DTLS 密钥什么关系、收发各查什么；细节算法第二轮再啃。
+> **深入：** Profile、ROC、nonce、重放窗口、伪代码——实现或排障时再读。总览不够时再回本篇。
 
 ## 一句话说明
 
 SRTP 为 RTP 媒体负载提供机密性、完整性和抗重放保护；SRTCP 对 RTCP 控制报文提供对应保护。二者共享 DTLS-SRTP 协商出的密钥层次，但使用不同的包索引和报文结构。本文只描述协议对象、状态和调用边界，不实现密码学算法。
+
+## 先记住这三句
+
+1. 本篇是 [[SRTP]] 的**报文级深潜**：RTP 用 SRTP 保护，RTCP 用 SRTCP 保护；密钥多半来自 DTLS-SRTP，但包索引/结构两边不同。
+2. 实时场景要允许乱序，又不能接受篡改或重放——所以每个包要有稳定索引，接收端要先认证再更新重放窗口。
+3. 初读只需抓住流程：协商密钥 → 按 SSRC 保护发出 → 对端验证/防重放 → 交给媒体或反馈；算法名和伪代码留给第二轮。
 
 ## 解决的问题
 
@@ -27,6 +33,36 @@ SRTP 为 RTP 媒体负载提供机密性、完整性和抗重放保护；SRTCP �
 3. 接收端按 SSRC 找到上下文，推断 index，先完成 profile 验证，再提交 replay window 和序号状态。
 4. 通过安全检查的 RTP 交给重排/解码，RTCP 交给反馈处理；失败包只更新受控计数。
 5. ICE restart、DTLS 重握手、SSRC 变化和关闭触发上下文复用、原子切换或清理。
+
+**图在说什么：** DTLS 导出密钥后，左发送端按 SSRC 上下文保护 RTP/SRTCP；右接收端先认证再推进重放窗口——认证失败的包不进解码/反馈。
+
+```mermaid
+sequenceDiagram
+    participant S as 发送端
+    participant N as 网络
+    participant R as 接收端
+    Note over S,R: DTLS-SRTP 已导出 master key（见 DTLS / SRTP）
+    S->>S: 按 SSRC 取 crypto context<br/>算 packet index / nonce
+    S->>N: SRTP 包（密文 + auth tag）
+    N->>R: 送达（可能乱序/重复）
+    R->>R: 推断 index → 验证 tag
+    alt 认证成功且未重放
+        R->>R: 推进 replay window
+        Note over R: RTP→解码；SRTCP→反馈处理
+    else 认证失败或重放
+        R-->>R: 丢弃（只打点计数）
+    end
+```
+
+## 示例场景
+
+一个视频 SSRC 在序列号 65534 后发送 65535、0、1。发送端在 0 处将 ROC 加一；接收端通过半序列空间推断相同的 packet index，认证成功后推进 replay window。若攻击者重放 65535，候选 index 已在窗口内置位，报文被丢弃且不会再次交给解码器。
+
+
+---
+
+> [!warning] 初读到此为止
+> 上面这些已经够第一次阅读。下面是算法套件、密钥层次、ROC/nonce、重放窗口与伪代码等实现细节，**第二轮或排障时再读**；总览可先回 [[SRTP]]，第一次也可直接点文末「第一次阅读下一站」。
 
 ## Profile 与算法套件边界
 
@@ -113,6 +149,8 @@ SRTP 不为每个包随机生成并传输一个完整 nonce，而是用 session 
 关键不变量是：同一 key epoch 下，不能让同一 SSRC 和 packet index 重复使用会导致 nonce 重用的组合；重启、重协商和 key epoch 切换必须明确状态边界。
 
 ## RTP 保护与验证原理
+
+**图在说什么：** 收包按 SSRC 找上下文、推断 index：出窗直接丢；过认证再推进重放窗，失败只计数不污染状态。
 
 ```mermaid
 flowchart TD
@@ -265,10 +303,6 @@ receive_srtcp(raw, rtcp_state, crypto_context):
 
 密码算法、KDF、AEAD、HMAC、tag 比较、序号扩展和 replay window 的细节应交给成熟、审计过的库；本笔记只定义输入输出、状态所有权、验证顺序和观测要求。不要复制伪代码直接实现密码学，也不要在生产环境启用为测试向量准备的固定密钥。
 
-## 示例场景
-
-一个视频 SSRC 在序列号 65534 后发送 65535、0、1。发送端在 0 处将 ROC 加一；接收端通过半序列空间推断相同的 packet index，认证成功后推进 replay window。若攻击者重放 65535，候选 index 已在窗口内置位，报文被丢弃且不会再次交给解码器。
-
 ## 阅读导航
 
 - **上一篇：** [[SRTP]]
@@ -276,6 +310,7 @@ receive_srtcp(raw, rtcp_state, crypto_context):
 - **所属专题：** [[00-知识地图/专题说明/03 ICE、STUN、TURN 与传输安全|03 ICE、STUN、TURN 与传输安全]]
 - **回看：** [[RTC 知识总览]] · [[00-知识地图/学习路线/学习进度模板|学习进度]] · [[00-知识地图/学习路线/RTC 工程师学习路线.canvas|阶段路线]]
 
+- **第一次阅读下一站：** [[ICE 与 TURN 诊断]]
 
 > 读完先回所属专题做练习/验收，再点下一篇。内部链接最多再追一层；不影响理解的陌生词先记下。
 

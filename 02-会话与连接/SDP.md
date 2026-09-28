@@ -8,13 +8,19 @@ status: growing
 # SDP
 
 > [!tip] 阅读提示
-> **前置：** 无强前置；可先从本篇一句话说明读起。
-> **初读：** 先读「一句话说明」和「核心机制」，弄清 SDP 解决什么问题、不负责什么。
-> **深入：** 「工程要点」、「工作流程或状态流」、「工程实现与取舍」 在实现、联调或排障时再读。
+> **前置：** [[Offer Answer]]。
+> **初读：** 读到「初读到此为止」就停。弄清：SDP 是「会话说明书」文本，不负责传媒体，也不负责打洞。
+> **深入：** 分隔线后的字段、BUNDLE、重新协商细节，联调时再读。
 
 ## 一句话说明
 
 SDP（Session Description Protocol）是一种描述会话能力和意图的文本格式，不负责传输信令，也不负责实际打洞。WebRTC 用它表达媒体段、收发方向、编解码能力、ICE 凭据、候选和 DTLS 指纹等协商参数。
+
+## 先记住这三句
+
+1. SDP = 用文本描述「有哪些媒体、方向如何、支持什么编码、ICE/安全参数是什么」——是说明书，不是运输车。
+2. 常见块：`m=` 媒体段、方向（sendrecv 等）、编解码（rtpmap/fmtp）、ICE 凭据与候选、DTLS 指纹。
+3. SDP 里写了地址，不代表通得了；真正通路仍靠 ICE 检查。Offer/Answer 只是双方就这份说明书达成一致。
 
 ## 核心机制
 
@@ -22,6 +28,8 @@ SDP（Session Description Protocol）是一种描述会话能力和意图的文�
 - `a=rtpmap`、`a=fmtp` 和 `a=rtcp-fb` 描述负载类型、格式参数和反馈能力；动态 payload type 只能在双方正确映射后使用。
 - `a=group:BUNDLE`、`a=rtcp-mux` 等属性允许多个媒体段复用传输；`a=ice-ufrag`、`a=ice-pwd` 和 candidate 属性关联 ICE 代次与地址。
 - `a=fingerprint`、`a=setup` 表达 DTLS 身份校验和握手角色。SDP 写有地址并不代表该地址可达，实际路径仍由 ICE 检查决定。
+
+**图在说什么：** 一份 SDP 先有会话级字段，再挂 audio/video/application 等 m= 段——各段各自带方向与编解码。
 
 ```mermaid
 flowchart TD
@@ -35,6 +43,37 @@ flowchart TD
 ```
 
 属性究竟位于 session level 还是 media level 要按规范和继承规则解析，图中只是把阅读视角分组。不能根据文本缩进猜层级，也不能把同名属性从一个 `m=` 段随意搬到另一个媒体段。
+
+
+
+**图在说什么：** 左本端 createOffer+setLocal 后经信令把 SDP 给右对端 setRemote；Answer 对称回来——SDP 不传媒体。
+
+```mermaid
+sequenceDiagram
+    participant A as 本端（左）
+    participant Sig as 信令
+    participant B as 对端（右）
+    A->>A: createOffer
+    A->>A: setLocalDescription(Offer)
+    A->>Sig: 发送 SDP Offer 文本
+    Sig->>B: 转发
+    B->>B: setRemoteDescription(Offer)
+    B->>B: createAnswer
+    B->>B: setLocalDescription(Answer)
+    B-->>Sig: 发送 SDP Answer 文本
+    Sig-->>A: 转发
+    A->>A: setRemoteDescription(Answer)
+    Note over A,B: SDP 只交换描述；媒体另走 ICE/DTLS/RTP
+```
+## 示例场景
+
+发送端新增屏幕共享轨道后，生成带新 video m-line 或复用现有 transceiver 的 Offer。接收端检查 mid、方向、codec 和 msid 后应答；即使 SDP 设置成功，仍需等待新 SSRC 的 RTP、解码和渲染首帧来确认共享真正可见。
+
+
+---
+
+> [!warning] 初读到此为止
+> 上面这些已经够第一次阅读。下面是工程展开与排障细节（字段、指标、状态流），**第二轮或遇到具体问题时再读**；第一次直接点文末「第一次阅读下一站」即可。
 
 ## 工程要点
 
@@ -87,10 +126,6 @@ SDP 是描述，不是传输协议；其中出现的 IP/端口、candidate 或 f
 - 抓取信令消息，校验 Offer/Answer 类型、版本、目标、候选代次和 end-of-candidates。
 - 用加轨、停轨、方向切换、不同 codec、BUNDLE/RTCP mux、ICE restart 和 SIP 网关做兼容性测试。
 
-## 示例场景
-
-发送端新增屏幕共享轨道后，生成带新 video m-line 或复用现有 transceiver 的 Offer。接收端检查 mid、方向、codec 和 msid 后应答；即使 SDP 设置成功，仍需等待新 SSRC 的 RTP、解码和渲染首帧来确认共享真正可见。
-
 ## 阅读导航
 
 - **上一篇：** [[Offer Answer]]
@@ -98,6 +133,7 @@ SDP 是描述，不是传输协议；其中出现的 IP/端口、candidate 或 f
 - **所属专题：** [[00-知识地图/专题说明/02 信令与 SDP 协商|02 信令与 SDP 协商]]
 - **回看：** [[RTC 知识总览]] · [[00-知识地图/学习路线/学习进度模板|学习进度]] · [[00-知识地图/学习路线/RTC 工程师学习路线.canvas|阶段路线]]
 
+- **第一次阅读下一站：** [[MediaStream Track 与 Transceiver]]
 
 > 读完先回所属专题做练习/验收，再点下一篇。内部链接最多再追一层；不影响理解的陌生词先记下。
 

@@ -9,41 +9,33 @@ status: growing
 
 > [!tip] 阅读提示
 > **前置：** [[ICE]]、[[ICE 候选与候选对]]、[[ICE 连通性检查与选路]]。
-> **初读：** 先读「一句话说明」「问题边界」「核心机制」和状态表，分清 gathering / connection / check-list 三套状态。
-> **深入：** 「工程要点」「常见误区与故障」「观测与验证」在排障时再读。
+> **初读：** 读到「初读到此为止」就停。弄清 gathering / connection / checklist 是三套并行状态，ICE connected ≠ 能播。
+> **深入：** 分隔线后的问题边界、误区与观测，排障时再读。
 
 ## 一句话说明
 
 ICE 状态机描述 Agent 在候选收集、连通性检查、提名选路和路径保活过程中的阶段与转移。它回答“现在卡在发现、检查还是已选路”，不等于 DTLS/SRTP 已成功，也不等于媒体已经可播。
 
-## 问题边界
+## 先记住这三句
 
-- **上游：** 本地网络接口、ICE server 配置、信令交换的远端候选与 ufrag/pwd、控制角色。
-- **下游：** selected pair（地址/协议）、consent 保活结果、是否允许启动 DTLS/媒体发送。
-- **易混淆：**
-  - `gathering complete` ≠ 媒体连通。
-  - `connected` / `completed` ≠ DTLS handshake 完成。
-  - ICE restart 是新一代凭据与候选，不是简单“再 ping 一次”。
-  - 浏览器 `iceConnectionState` 与内部 checklist 细状态不是同一粒度。
-  - 连通性检查与选路细节见 [[ICE 连通性检查与选路]]；TURN 生命周期诊断见 [[ICE 与 TURN 诊断]]，本篇聚焦状态与转移。
+1. ICE 至少有三条时间线：**收集候选（gathering）**、**检查候选对（checklist）**、**连接结果（connected/failed 等）**——别混成一个灯。
+2. `gathering complete` 或 `connected` 都不等于 DTLS 完成，更不等于画面已经出来。
+3. 看状态是为了回答「卡在发现、检查，还是已经选路」；细状态表留给第二轮。
 
-## 核心机制
+## 用一句话说清
 
-至少要分开三条并行时间线：
+ICE 不是一条状态，而是**三套进度条并行**：候选收集、候选对检查、Agent 连接态。`connected` 只说明「有路了」，不等于已经出声出画。
 
-1. **Gathering：** new → gathering → complete（或失败/超时）。
-2. **Checklist / pair：** waiting → in-progress → succeeded/failed；controlling 侧提名。
-3. **Agent 连接态：** new → checking → connected → completed / failed / disconnected → closed。
+**第一次对照：**
 
-```text
-Gathering:   new -> gathering -> complete
-Checklist:   waiting -> in-progress -> succeeded|failed
-Agent:       new -> checking -> connected -> completed
-               \-> failed
-             connected/completed -> disconnected -> checking|failed
-             任意活动态 -> closed
-ICE restart: 生成新 generation，旧 pair 与旧凭据作废
-```
+| 你听到的词 | 人话 |
+| --- | --- |
+| gathering | 还在找本机可能的地址 |
+| checking | 在试哪一对地址能打通 |
+| connected / completed | 选中了可用路径 |
+| failed / disconnected | 路不通或后来断了 |
+
+（状态图保留在初读；转移表与 restart 细节在折叠线后。）
 
 ```mermaid
 flowchart TB
@@ -65,6 +57,40 @@ flowchart TB
     end
     R["ICE restart<br/>新 generation"] -. "旧凭据和旧 pair 失效" .-> GN
 ```
+
+---
+
+> [!warning] 初读到此为止
+> 上面这些已经够第一次阅读。下面先是「原初读区深文」（可跳过），再是工程细节；**第一次直接点文末「第一次阅读下一站」即可。**
+
+
+## 初读展开（原初读区深文，第二轮再读）
+
+> 下面是本篇原先堆在初读区的展开内容，已整体后移，避免第一次阅读过载。
+
+## 核心机制
+
+至少要分开三条并行时间线：
+
+1. **Gathering：** new → gathering → complete（或失败/超时）。
+2. **Checklist / pair：** waiting → in-progress → succeeded/failed；controlling 侧提名。
+3. **Agent 连接态：** new → checking → connected → completed / failed / disconnected → closed。
+
+```text
+Gathering:   new -> gathering -> complete
+Checklist:   waiting -> in-progress -> succeeded|failed
+Agent:       new -> checking -> connected -> completed
+               \-> failed
+             connected/completed -> disconnected -> checking|failed
+             任意活动态 -> closed
+ICE restart: 生成新 generation，旧 pair 与旧凭据作废
+```
+
+**图在说什么：** 三套状态并行——候选收集、候选对检查、ICE Agent 连接态；`connected` 只说明有路，不等于媒体已在播。
+
+
+> （本图已上移到初读区，此处不重复。）
+
 
 三组状态并行推进，不能把同一列当成同步发生。例如 gathering 已经 complete 时，Agent 仍可能 checking；某个 pair succeeded 时，也可能尚未提名为 selected pair。
 
@@ -97,6 +123,19 @@ flowchart TB
 5. 网络切换或调用 restart：提高 generation，换凭据，清空旧 pair，重新 gathering/checking。
 6. 关闭时停止定时器并释放 socket/TURN 分配。
 
+
+---
+
+## 问题边界
+
+- **上游：** 本地网络接口、ICE server 配置、信令交换的远端候选与 ufrag/pwd、控制角色。
+- **下游：** selected pair（地址/协议）、consent 保活结果、是否允许启动 DTLS/媒体发送。
+- **易混淆：**
+  - `gathering complete` ≠ 媒体连通。
+  - `connected` / `completed` ≠ DTLS handshake 完成。
+  - ICE restart 是新一代凭据与候选，不是简单“再 ping 一次”。
+  - 浏览器 `iceConnectionState` 与内部 checklist 细状态不是同一粒度。
+  - 连通性检查与选路细节见 [[ICE 连通性检查与选路]]；TURN 生命周期诊断见 [[ICE 与 TURN 诊断]]，本篇聚焦状态与转移。
 ## 工程要点
 
 - 日志必须带 **generation**、role、selected pair 五元组、失败原因码；否则无法区分“旧路径幽灵事件”。
@@ -140,6 +179,8 @@ flowchart TB
 - **下一篇：** [[TLS]]
 - **所属专题：** [[00-知识地图/专题说明/03 ICE、STUN、TURN 与传输安全|03 ICE、STUN、TURN 与传输安全]]
 - **回看：** [[RTC 知识总览]] · [[00-知识地图/学习路线/学习进度模板|学习进度]] · [[00-知识地图/学习路线/RTC 工程师学习路线.canvas|阶段路线]]
+
+- **第一次阅读下一站：** [[TLS]]
 
 > 读完先回所属专题做练习/验收，再点下一篇。内部链接最多再追一层；不影响理解的陌生词先记下。
 

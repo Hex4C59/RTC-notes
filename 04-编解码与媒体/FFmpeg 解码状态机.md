@@ -4,24 +4,34 @@ tags: [rtc/concept, rtc/media, rtc/ffmpeg]
 type: concept
 status: growing
 ---
-
 # FFmpeg 解码状态机
 
 > [!tip] 阅读提示
-> **前置：** [[AVPacket 与 AVFrame]]、[[PTS DTS 与时间基]]。
-> **初读：** 先读“定义”“核心机制”“正常处理步骤”和“具体例子”，讲清送入 packet 与取出 frame 的关系。
-> **深入：** 所有权、时间缓冲、异常状态与取舍在编写或调试解码循环时阅读。
+> **前置：** [[AVPacket 与 AVFrame]] 初读区。
+> **初读：** 读到「初读到此为止」就停。弄清：现代 FFmpeg 用 send/receive，EAGAIN 与排空是正常状态，不是「API 坏了」。
+> **深入：** 冲刷、多线程、错误码与所有权，写解码循环时再读。
 
 ## 一句话说明
 
 现代 FFmpeg 解码接口把输入压缩包和输出媒体帧解耦为显式状态机：通过 `avcodec_send_packet()` 提交一个 `AVPacket`，再循环调用 `avcodec_receive_frame()` 取出所有当前可用的 `AVFrame`。一次 send 可能对应零个、一个或多个 receive，不能假设“一包一帧”或“一次调用必有输出”。
 
-## 核心机制
+## 先记住这三句
 
-1. 由 [[复用与解复用]]取得流参数，使用 `avcodec_parameters_to_context()` 配置 `AVCodecContext`，打开正确的解码器。
-2. 读取 packet，按 `stream_index` 送入对应解码器；一次 send 可能产生零个、一个或多个 frame。
-3. `receive_frame` 返回 `AVERROR(EAGAIN)` 表示当前没有更多输出；在 `send_packet` 返回 EAGAIN 时，输入 packet 没有被接受，必须先 receive，再重试同一个 packet。
-4. 输入结束时向 send 传入 `NULL` 进入 drain，只 receive 到 `AVERROR_EOF`，期间不能再发送普通 packet；seek、切流或错误恢复时按上下文要求 flush。
+1. 典型循环：`send_packet` 喂压缩包 → `receive_frame` 取原始帧；编码则是 `send_frame` / `receive_packet`。
+2. **`EAGAIN`** 常表示「这次还不能收/发，稍后再试」——要按状态机重试，不是直接放弃。
+3. 结束时要 **flush/drain**：继续 receive 直到 EOF，否则尾帧会丢。
+
+## 用一句话说清
+
+现代 FFmpeg 解码不是「丢进一个函数就出画面」，而是 **send / receive 循环**：你先 `send` 压缩包，再 `receive` 解出的帧；遇到 `EAGAIN` 表示「这一侧先停一下，去另一侧收/送」，不是 API 坏了。
+
+**第一次只需记住：**
+
+1. 送进压缩数据 ≠ 立刻拿到一帧
+2. `EAGAIN` = 状态提示，按环继续转
+3. 文件/流结束进入 **drain**（排空）：不再送新包，只把剩余帧收完
+
+（状态图与错误码对照在折叠线后。）
 
 ```mermaid
 stateDiagram-v2
@@ -39,6 +49,29 @@ stateDiagram-v2
     Flushing --> Reading: flush codec 并清空旧队列
     Closed --> [*]
 ```
+
+---
+
+> [!warning] 初读到此为止
+> 上面这些已经够第一次阅读。下面先是「原初读区深文」（可跳过），再是工程细节；**第一次直接点文末「第一次阅读下一站」即可。**
+
+
+## 初读展开（原初读区深文，第二轮再读）
+
+> 下面是本篇原先堆在初读区的展开内容，已整体后移，避免第一次阅读过载。
+
+## 核心机制
+
+1. 由 [[复用与解复用]]取得流参数，使用 `avcodec_parameters_to_context()` 配置 `AVCodecContext`，打开正确的解码器。
+2. 读取 packet，按 `stream_index` 送入对应解码器；一次 send 可能产生零个、一个或多个 frame。
+3. `receive_frame` 返回 `AVERROR(EAGAIN)` 表示当前没有更多输出；在 `send_packet` 返回 EAGAIN 时，输入 packet 没有被接受，必须先 receive，再重试同一个 packet。
+4. 输入结束时向 send 传入 `NULL` 进入 drain，只 receive 到 `AVERROR_EOF`，期间不能再发送普通 packet；seek、切流或错误恢复时按上下文要求 flush。
+
+**图在说什么：** 现代 FFmpeg 解码是 send/receive 状态环：`EAGAIN` 表示「先收/再送」，不是 API 坏了；EOF 后进入 drain 排空。
+
+
+> （本图已上移到初读区，此处不重复。）
+
 
 这里要同时观察两件事：解码器当前能否接收输入，以及调用方是否仍持有一个未被接受的 pending packet。只用“正在读包/正在解码”两个状态无法正确表达 `EAGAIN`。
 
@@ -122,6 +155,12 @@ for (;;) {
 }
 ```
 
+## 具体例子
+
+若 send 第 101 个 packet 返回 EAGAIN，正确流程是保持第 101 个 packet 不动，receive 并处理当前已排队的 frame，然后再次 send 第 101 个 packet；不能 unref 第 101 个再读取第 102 个。输入 EOF 后，send NULL 进入 drain，直到 receive 返回 EOF 才能销毁 codec context。
+
+---
+
 ## 工程要点
 
 - `avcodec_send_packet()` 返回 0 后，调用方可以 unref/reuse 自己的 packet，解码器会保留需要的底层引用；若返回 EAGAIN，packet 未被接受，必须原样保留并在 receive 后重试，不能读取下一个 packet 覆盖它。
@@ -181,10 +220,6 @@ send/receive 的次数不代表帧率；B 帧、音频内部缓存和解码器�
 - 用延迟解码、B 帧、音频多帧缓存、EAGAIN 注入/模拟、EOF drain、seek、坏包和线程取消测试每个状态转移。
 - 用 FFmpeg debug log、ASan/TSan、队列深度和 P99 decode time 验证没有丢 packet、重复 frame、悬空引用或 drain 死循环。
 
-## 具体例子
-
-若 send 第 101 个 packet 返回 EAGAIN，正确流程是保持第 101 个 packet 不动，receive 并处理当前已排队的 frame，然后再次 send 第 101 个 packet；不能 unref 第 101 个再读取第 102 个。输入 EOF 后，send NULL 进入 drain，直到 receive 返回 EOF 才能销毁 codec context。
-
 ## 阅读导航
 
 - **上一篇：** [[实时媒体链路]]
@@ -192,6 +227,7 @@ send/receive 的次数不代表帧率；B 帧、音频内部缓存和解码器�
 - **所属专题：** [[00-知识地图/专题说明/04 WebRTC 应用接入与源码阅读|04 WebRTC 应用接入与源码阅读]]
 - **回看：** [[RTC 知识总览]] · [[00-知识地图/学习路线/学习进度模板|学习进度]] · [[00-知识地图/学习路线/RTC 工程师学习路线.canvas|阶段路线]]
 
+- **第一次阅读下一站：** [[WebRTC Stats]]
 
 > 读完先回所属专题做练习/验收，再点下一篇。内部链接最多再追一层；不影响理解的陌生词先记下。
 

@@ -8,35 +8,39 @@ status: growing
 # Opus RTP 负载格式
 
 > [!tip] 阅读提示
-> **前置：** [[PCM 与采样]]、[[Opus]]、[[RTP]]。
-> **初读：** 先读“一句话边界”和“RTP 与 SDP 字段”，理解 Opus packet、RTP 负载与时间戳的关系。
-> **深入：** packet 字段解析、收发状态机和伪代码在完成基础音频通路后阅读。
+> **前置：** [[Opus]]、[[RTP]]；有 [[PCM 与采样]] 更好。
+> **初读：** 读到「初读到此为止」就停。弄清：一个 RTP 包 = 一个完整 Opus packet；时间戳按 48 kHz、按 packet 总时长递增。
+> **深入：** TOC/frame 布局、收发状态机和伪代码，做音频通路联调时再读。
 
 ## 一句话说明
 
-这篇笔记只讨论“已经编码好的 Opus packet 如何放进 RTP”，不重复讲 Opus 的 SILK/CELT 编码原理。规范依据主要是 RFC 7587（RTP Payload Format for Opus）和 RFC 6716（Opus 编码格式）；WebRTC 的常见参数和浏览器行为单独标注为实现约定。
+这篇笔记只讨论「已经编码好的 Opus packet 如何放进 RTP」，不重复讲 Opus 的 SILK/CELT 编码原理。规范依据主要是 RFC 7587（RTP Payload Format for Opus）和 RFC 6716（Opus 编码格式）；WebRTC 的常见参数和浏览器行为单独标注为实现约定。
+
+## 先记住这三句
+
+1. **一个 RTP 包承载一个完整 Opus packet**——不像 H.264 FU-A 那样把一个 packet 切到多个 RTP。
+2. RTP 时钟固定 **48 kHz**；20 ms packet 时间戳加 **960**（即使麦克风是 16 kHz）。
+3. 一个 Opus packet 里可以有 1 个或多个 frame；不能「每个 RTP 包固定当 20 ms」硬解。
 
 ## 一句话边界
 
 一个 RTP 包承载一个完整的 Opus packet。这个 Opus packet 内部可以包含 1 个或多个 Opus frame，但不能像 H.264 FU-A 那样把一个 Opus packet 任意切到多个 RTP 包中。RTP 序号用于包级丢失检测，RTP 时间戳指向该 packet 中第一个音频 frame 的采样时刻。
 
-## RTP 与 SDP 字段
+## RTP 与 SDP 字段（初读）
 
 ### RTP 头
 
 | 字段 | Opus 语义 |
 | --- | --- |
-| `Payload Type` | 由 `a=rtpmap` 映射到 `opus/48000/<channels>`；WebRTC 常见动态 PT 是 111，但 PT 数值不是协议固定值 |
-| `Timestamp` | 48 kHz RTP 时钟；20 ms 音频 packet 增加 960，即使编码器输入是 16 kHz |
-| `Sequence Number` | 每个 RTP packet 加 1；丢包、重复、乱序和回绕按 RTP 规则处理 |
-| `SSRC` | 当前 Opus 同步源；源重启/冲突时可能变化 |
-| `Marker` | RFC 7587 使用 RTP profile 的 marker 语义；WebRTC 通常在静音后 talkspurt 的首包置 1，但接收器不能把它当成音频帧边界 |
+| `Payload Type` | 由 `a=rtpmap` 映射到 `opus/48000/<channels>`；常见动态 PT 111，但数值不固定 |
+| `Timestamp` | 48 kHz；20 ms 加 960 |
+| `Sequence Number` | 每包 +1 |
+| `SSRC` | 当前 Opus 同步源 |
+| `Marker` | 常见于静音后 talkspurt 首包；**不能**当音频帧边界 |
 
-`Timestamp` 的增量是 packet 内所有音频 frame 的总时长。例如一个 packet 聚合两个 20 ms frame，时间戳仍只指向第一个 frame，下一个 packet 的时间戳增加 1920。接收端不能按“每个 RTP 包固定 20 ms”解码。
+`Timestamp` 的增量是 packet 内所有音频 frame 的总时长。例如一个 packet 聚合两个 20 ms frame，时间戳仍只指向第一个 frame，下一个 packet 增加 1920。
 
 ### SDP 关联
-
-典型 WebRTC 协商片段如下：
 
 ```sdp
 m=audio 9 UDP/TLS/RTP/SAVPF 111
@@ -44,11 +48,17 @@ a=rtpmap:111 opus/48000/2
 a=fmtp:111 minptime=10;useinbandfec=1;stereo=1;sprop-stereo=1;usedtx=1
 ```
 
-- `a=rtpmap:<pt> opus/48000/<channels>` 是 PT、编码名、RTP 时钟和声道数的映射。
-- `minptime` 是发送端希望使用的最小 packet 时长提示；它不是强制所有 packet 都必须等于该值。
-- `useinbandfec`、`usedtx`、`stereo`、`sprop-stereo`、`maxaveragebitrate` 等来自 Opus RTP/SDP 约定；是否支持以及如何应用由双方实现决定。
-- Offer/Answer 的 fmtp 是方向性的能力协商，不能把远端声明的 `maxaveragebitrate` 直接当作本地编码器已经生效的实时码率。
-- PT 可能在重新协商中变化；解码器查表应使用当前 m-line 的映射，不要把 111 写死。
+- `minptime` 是希望的最小 packet 时长提示，不是每个包都必须等于它。
+- `useinbandfec` / `usedtx` / `stereo` 等由双方实现决定如何应用。
+- PT 可能在重新协商中变化，不要把 111 写死。
+
+> [!example] 和 H.264 对照
+> 视频大 NALU 可以 FU-A 分片；Opus packet 太大时通常去调帧长/码率，而不是把同一个 Opus packet 截断分开发。
+
+---
+
+> [!warning] 初读到此为止
+> 上面这些已经够第一次阅读。下面是工程展开与排障细节（字段、指标、状态流），**第二轮或遇到具体问题时再读**；第一次直接点文末「第一次阅读下一站」即可。
 
 ## Opus packet 的字段级解析
 
@@ -152,7 +162,7 @@ onOpusRtp(rtp):
 ## 标准与 WebRTC 实现的边界
 
 - RFC 7587/RFC 6716 规定 RTP 映射、TOC/packet 语义和时间规则；它们不规定浏览器必须使用 PT 111、某个固定 jitter buffer 或某个具体 PLC 算法。
-- WebRTC 常见 `minptime=10;useinbandfec=1`、20 ms 初始帧、DTX、NetEq 以及特定 marker 使用是实现/配置习惯，不是“Opus 协议永远如此”。
+- WebRTC 常见 `minptime=10;useinbandfec=1`、20 ms 初始帧、DTX、NetEq 以及特定 marker 使用是实现/配置习惯，不是「Opus 协议永远如此」。
 - RFC 7587 不定义 RTX 如何在业务上限流，也不定义 SFU 如何转发/改写 SSRC；这些属于 RTP/反馈/服务端实现。
 
 ## 抓包验证与错误用例
@@ -174,6 +184,7 @@ onOpusRtp(rtp):
 - **下一篇：** [[RTP 头扩展]]
 - **所属专题：** [[00-知识地图/专题说明/09 RTP 打包、解析与传输|09 RTP 打包、解析与传输]]
 - **回看：** [[RTC 知识总览]] · [[00-知识地图/学习路线/学习进度模板|学习进度]] · [[00-知识地图/学习路线/RTC 工程师学习路线.canvas|阶段路线]]
+- **第一次阅读下一站：** [[视频 RTP 接收与组帧状态机]]（收端怎么从包拼回视频帧）或 [[抖动缓冲]]（音频时间线）
 
 
 > 读完先回所属专题做练习/验收，再点下一篇。内部链接最多再追一层；不影响理解的陌生词先记下。
